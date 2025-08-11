@@ -1,1 +1,28 @@
-{}
+{
+    "accountAssociation": {
+      "header": "eyJmaWQiOjM0MTY0NiwidHlwZSI6ImF1dGgiLCJrZXkiOiIweDBGYzcwQkRiQzM2ZkQzNTNiN2U3Y2JGMTViMzg5MTFiNTgzYTJlYUUifQ",
+      "payload": "eyJkb21haW4iOiJzdHJlYW1pbmctbGVhZGVyYm9hcmQtZXhhbXBsZS52ZXJjZWwuYXBwIn0",
+      "signature": "1u/v+RC4/ajkSSbS9xSlkuOIZ/biHHqveWMuouWa9N5rgmOoOgJuRJaZBeg58DdcN7vCYRcoBnBDMrmbsZXJdxs="
+    },
+    "frame": {
+        "name": "Streaming Leaderobard",
+        "version": "1",
+        "iconUrl": "https://streaming-leaderboard-example.vercel.app/image.png",
+        "homeUrl": "https://streaming-leaderboard-example.vercel.app",
+        "subtitle": "If you aren't streaming, what are you doing with your life?",
+        "description": "Most go with the flow, but can you get to the top ?",
+        "primaryCategory": "games",
+        "splashImageUrl": "https://streaming-leaderboard-example.vercel.app/splash.png",
+        "splashBackgroundColor": "#FFFFFF",
+        "tags": [
+          "streaming",
+          "fun",
+          "game",
+          "leaderboard",
+          "superfluid"
+        ],
+        "buttonTitle": "Go with the flow",
+        "tagline": "Every second counts, jump in!",
+        "webhookUrl": "https://streaming-leaderboard-example.vercel.app/webhookToBeUpdated"
+      }
+}
