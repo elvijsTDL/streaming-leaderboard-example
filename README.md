@@ -2,6 +2,39 @@ This is a [Vite](https://vitejs.dev) project bootstrapped with [`@farcaster/crea
 
 For documentation and guides, visit [miniapps.farcaster.xyz](https://miniapps.farcaster.xyz/docs/getting-started).
 
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Reown/WalletConnect Project ID
+VITE_REOWN_PROJECT_ID=your_project_id_here
+
+# Token Configuration
+# The address of the Superfluid token to track
+VITE_TOKEN_ADDRESS=0x1c4f69f14cf754333c302246d25a48a13224118a
+
+# The symbol/ticker of the token to display in the UI
+VITE_TOKEN_SYMBOL=BUTTHOLE
+
+# Social Links (Optional)
+# Official X (formerly Twitter) profile URL
+VITE_TWITTER_URL=https://twitter.com/your_token_handle
+
+# Official Farcaster profile URL  
+VITE_FARCASTER_URL=https://warpcast.com/your_token_handle
+
+# Official Telegram group or channel URL
+VITE_TELEGRAM_URL=https://t.me/your_token_group
+
+# Official website URL
+VITE_WEBSITE_URL=https://your-token-website.com
+```
+
+The app will use these environment variables to configure which Superfluid token to track for streaming leaderboards and statistics. If not provided, it defaults to the BUTTHOLE token address shown above.
+
+Social links are optional - if provided, they will display as official profile/page links. If not provided, those social media buttons will not be shown (only DEXScreener, BaseScan, and Copy Contract will always be available).
+
 ## `farcaster.json`
 
 The `/.well-known/farcaster.json` is served from the [public

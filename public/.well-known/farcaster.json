@@ -5,7 +5,7 @@
       "signature": "1u/v+RC4/ajkSSbS9xSlkuOIZ/biHHqveWMuouWa9N5rgmOoOgJuRJaZBeg58DdcN7vCYRcoBnBDMrmbsZXJdxs="
     },
     "frame": {
-        "name": "Streaming Leaderobard",
+        "name": "Streaming Leaderboard",
         "version": "1",
         "iconUrl": "https://streaming-leaderboard-example.vercel.app/image.png",
         "homeUrl": "https://streaming-leaderboard-example.vercel.app",

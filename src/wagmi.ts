@@ -1,15 +1,15 @@
-import { farcasterFrame } from "@farcaster/miniapp-wagmi-connector";
-import { http, createConfig } from "wagmi";
-import { base, mainnet } from "wagmi/chains";
+import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { base } from "@reown/appkit/networks";
 
-export const config = createConfig({
-  chains: [base, mainnet],
-  connectors: [farcasterFrame()],
-  transports: {
-    [base.id]: http(),
-    [mainnet.id]: http(),
-  },
+export const projectId = (import.meta.env.VITE_REOWN_PROJECT_ID as string | undefined) ?? "";
+
+export const wagmiAdapter = new WagmiAdapter({
+  projectId,
+  networks: [base],
+  ssr: false,
 });
+
+export const config = wagmiAdapter.wagmiConfig;
 
 declare module "wagmi" {
   interface Register {

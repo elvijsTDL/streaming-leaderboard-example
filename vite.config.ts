@@ -6,5 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: true,
+    proxy: {
+      "/api/whois": {
+        target: "https://whois.superfluid.finance",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/whois/, "/api"),
+      },
+    },
   },
 });
