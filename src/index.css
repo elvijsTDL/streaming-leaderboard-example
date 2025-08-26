@@ -121,3 +121,79 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Theme system custom properties override */
+:root {
+  /* These will be set dynamically by theme.ts */
+  /* Primary colors */
+  --theme-primary: #F59E0B;
+  --theme-primary-hover: #D97706;
+  --theme-primary-dark: #92400E;
+  
+  /* Secondary colors */
+  --theme-secondary: #6B7280;
+  --theme-secondary-hover: #4B5563;
+  
+  /* Background colors */
+  --theme-background: #000000;
+  --theme-card-background: #111827;
+  --theme-card-border: #D97706;
+  
+  /* Text colors */
+  --theme-text-primary: #F59E0B;
+  --theme-text-secondary: #F59E0B80;
+  --theme-text-muted: #6B7280;
+  
+  /* Status colors */
+  --theme-success: #10B981;
+  --theme-error: #EF4444;
+  --theme-warning: #F59E0B;
+  
+  /* Interactive elements */
+  --theme-button-background: #D97706;
+  --theme-button-hover: #B45309;
+  --theme-link: #F59E0B;
+  --theme-link-hover: #FDE68A;
+}
+
+/* Utility classes for theme colors */
+.theme-bg { background-color: var(--theme-background) !important; }
+.theme-card-bg { background-color: var(--theme-card-background) !important; }
+.theme-text-primary { color: var(--theme-text-primary) !important; }
+.theme-text-secondary { color: var(--theme-text-secondary) !important; }
+.theme-text-muted { color: var(--theme-text-muted) !important; }
+.theme-border { border-color: var(--theme-card-border) !important; }
+.theme-button { 
+  background-color: var(--theme-button-background) !important;
+}
+.theme-button:hover {
+  background-color: var(--theme-button-hover) !important;
+}
+.theme-success { 
+  background-color: var(--theme-success) !important; 
+  color: var(--theme-success) !important; 
+}
+.theme-error { 
+  background-color: var(--theme-error) !important; 
+  color: var(--theme-error) !important; 
+}
+
+/* Better contrast for disabled/low-opacity elements */
+.theme-text-primary[style*="opacity"] { 
+  color: var(--theme-text-primary) !important; 
+  filter: brightness(1.2);
+}
+.theme-text-secondary[style*="opacity"] { 
+  color: var(--theme-text-secondary) !important; 
+  filter: brightness(1.3);
+}
+
+/* Enhanced button states */
+.theme-button:not(:disabled):not([aria-disabled="true"]) {
+  filter: brightness(1.1);
+}
+button:disabled .theme-text-primary,
+button[aria-disabled="true"] .theme-text-primary {
+  opacity: 0.6 !important;
+  filter: brightness(1.5) !important;
+}

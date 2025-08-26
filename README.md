@@ -19,7 +19,7 @@ VITE_TOKEN_SYMBOL=BUTTHOLE
 
 # Social Links (Optional)
 # Official X (formerly Twitter) profile URL
-VITE_TWITTER_URL=https://twitter.com/your_token_handle
+VITE_X_URL=https://twitter.com/your_token_handle
 
 # Official Farcaster profile URL  
 VITE_FARCASTER_URL=https://warpcast.com/your_token_handle

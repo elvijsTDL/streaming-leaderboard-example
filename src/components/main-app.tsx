@@ -8,13 +8,33 @@ import { WalletProvider, useWallet } from "../hooks/use-wallet";
 import { TOKEN_ADDRESS, TOKEN_SYMBOL, fetchTopFlowRateLeaders, fetchTopVolumeLeaders, formatFlowRatePerDay, formatTokenAmount, fetchTokenStatistics } from "../lib/superfluid";
 import { resolveManyProfiles, type ResolvedProfile } from "../lib/whois";
 import { TokenChart } from "./token-chart";
+import { StremeCard } from "./streme-card";
+import { EventsCard } from "./events-card";
+import { shortenAddress } from "../lib/utils";
 
 function MainView() {
   const { user: farcasterUser, isConnected: isFarcasterConnected, signIn: farcasterSignIn, signOut: farcasterSignOut, isConnecting: isFarcasterConnecting } = useFarcaster();
   const { address, isConnected: isWalletConnected, flowRate, totalVolumeStreamed } = useWallet();
   const { profile: whoisProfile, chainStats, loading: userStatsLoading } = useUserProfile();
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
-  const isFullyConnected = isFarcasterConnected && isWalletConnected;
+  const handleCopyAddress = async (addressToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(addressToCopy);
+      setCopiedAddress(addressToCopy);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = addressToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedAddress(addressToCopy);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    }
+  };
 
   const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<"flow" | "volume">("flow");
 
@@ -116,61 +136,51 @@ function MainView() {
   }, [activeLeaderboardTab, flowLeaders, volumeLeaders, address, page]);
 
   return (
-    <div className="min-h-screen bg-black text-amber-400 font-mono">
+    <div className="min-h-screen theme-bg theme-text-primary font-mono">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-amber-400">FARCASTER TOKEN MATRIX</h1>
-          <p className="text-amber-500">{isFullyConnected ? "Fully connected to the decentralized protocol" : "Connect Farcaster and wallet to access all features"}</p>
-          <div className="flex justify-center space-x-4 mt-4">
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isFarcasterConnected ? "bg-amber-400" : "bg-red-400"}`}></div>
-              <span className="text-xs">Farcaster</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${isWalletConnected ? "bg-amber-400" : "bg-red-400"}`}></div>
-              <span className="text-xs">Wallet</span>
-            </div>
-          </div>
+          <h1 className="text-4xl font-bold mb-4 theme-text-primary">The ${TOKEN_SYMBOL} Token Matrix</h1>
+          <p className="theme-text-secondary">Your one stop shop for all ${TOKEN_SYMBOL} things </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-gray-900 border border-amber-600 rounded-lg p-6">
-            <h2 className="text-xl font-bold mb-4 text-amber-400">USER PROFILE</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="theme-card-bg theme-border rounded-lg p-6" style={{borderWidth: '1px'}}>
+            <h2 className="text-xl font-bold mb-4 theme-text-primary">USER PROFILE</h2>
             {isFarcasterConnected && farcasterUser ? (
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <img src={farcasterUser.pfpUrl || "/placeholder.svg"} alt="Profile" className="w-10 h-10 rounded-full border border-amber-600" />
+                  <img src={farcasterUser.pfpUrl || "/placeholder.svg"} alt="Profile" className="w-10 h-10 rounded-full border theme-border" />
                   <div>
-                    <div className="text-amber-400 font-bold">@{farcasterUser.username}</div>
-                    <div className="text-amber-500 text-sm">{farcasterUser.displayName}</div>
+                    <div className="theme-text-primary font-bold">@{farcasterUser.username}</div>
+                    <div className="theme-text-secondary text-sm">{farcasterUser.displayName}</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="bg-gray-800/50 rounded p-2 border border-amber-600/30">
-                    <div className="text-amber-500">Followers</div>
-                    <div className="text-amber-400 font-bold">{farcasterUser.followerCount}</div>
+                  <div className="theme-card-bg rounded p-2 border theme-border" style={{borderWidth: '1px'}}>
+                    <div className="theme-text-secondary">Followers</div>
+                    <div className="theme-text-primary font-bold">{farcasterUser.followerCount}</div>
                   </div>
-                  <div className="bg-gray-800/50 rounded p-2 border border-amber-600/30">
-                    <div className="text-amber-500">Following</div>
-                    <div className="text-amber-400 font-bold">{farcasterUser.followingCount}</div>
+                  <div className="theme-card-bg rounded p-2 border theme-border" style={{borderWidth: '1px'}}>
+                    <div className="theme-text-secondary">Following</div>
+                    <div className="theme-text-primary font-bold">{farcasterUser.followingCount}</div>
                   </div>
                 </div>
                 {/* Token stats moved next to profile */}
                 <div className="grid grid-cols-3 gap-3 text-sm">
-                  <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                    <div className="text-amber-500">Rank</div>
-                    <div className="text-amber-400 font-bold">#3</div>
+                  <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                    <div className="theme-text-secondary">Rank</div>
+                    <div className="theme-text-primary font-bold">#3</div>
                   </div>
-                  <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                    <div className="text-amber-500">Flow Rate</div>
-                    <div className="text-amber-400 font-bold">{isWalletConnected ? flowRate : "0.000 ETH/day"}</div>
+                  <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                    <div className="theme-text-secondary">Flow Rate</div>
+                    <div className="theme-text-primary font-bold">{isWalletConnected ? flowRate : "0.000 ETH/day"}</div>
                   </div>
-                  <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                    <div className="text-amber-500">Total Streamed</div>
-                    <div className="text-amber-400 font-bold">{isWalletConnected ? totalVolumeStreamed : "0.000 ETH"}</div>
+                  <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                    <div className="theme-text-secondary">Total Streamed</div>
+                    <div className="theme-text-primary font-bold">{isWalletConnected ? totalVolumeStreamed : "0.000 ETH"}</div>
                   </div>
                 </div>
-                <Button onClick={farcasterSignOut} variant="outline" className="w-full border-amber-600 text-amber-400 hover:bg-amber-600 hover:text-black bg-transparent">
+                <Button onClick={farcasterSignOut} variant="outline" className="w-full theme-border theme-text-primary hover:theme-button hover:text-black bg-transparent" style={{borderWidth: '1px'}}>
                   DISCONNECT
                 </Button>
               </div>
@@ -180,39 +190,42 @@ function MainView() {
                 {isWalletConnected && address ? (
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <img src={whoisProfile?.recommendedAvatar || whoisProfile?.Farcaster?.avatarUrl || whoisProfile?.ENS?.avatarUrl || "/placeholder.svg"} alt="Profile" className="w-10 h-10 rounded-full border border-amber-600" />
-                      <div>
-                        <div className="text-amber-400 font-bold">{whoisProfile?.recommendedName || whoisProfile?.ENS?.handle || whoisProfile?.Farcaster?.handle || `${address.slice(0,6)}...${address.slice(-4)}`}</div>
-                        <div className="text-amber-500 text-xs break-all">{address}</div>
+                      <img src={whoisProfile?.recommendedAvatar || whoisProfile?.Farcaster?.avatarUrl || whoisProfile?.ENS?.avatarUrl || "/placeholder.svg"} alt="Profile" className="w-10 h-10 rounded-full border theme-border" />
+                      <div className="flex-1">
+                        <div className="theme-text-primary font-bold">{whoisProfile?.recommendedName || whoisProfile?.ENS?.handle || whoisProfile?.Farcaster?.handle || shortenAddress(address)}</div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyAddress(address)}
+                          className="flex items-center gap-1 theme-text-secondary text-xs hover:theme-text-primary transition-colors cursor-pointer group"
+                          title="Click to copy address"
+                        >
+                          <span className="font-mono">{shortenAddress(address)}</span>
+                          <span className="text-[10px] opacity-60 group-hover:opacity-100">
+                            {copiedAddress === address ? '✓' : '📋'}
+                          </span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => navigator.clipboard.writeText(address)}
-                        className="text-xs px-2 py-0.5 rounded border border-amber-600/40 text-amber-400 hover:bg-amber-600 hover:text-black"
-                      >
-                        Copy
-                      </button>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-sm">
-                      <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                        <div className="text-amber-500">Rank (Flow)</div>
-                        <div className="text-amber-400 font-bold">{userStatsLoading ? "…" : (chainStats?.flowRank ?? "—")}</div>
+                      <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                        <div className="theme-text-secondary">Rank (Flow)</div>
+                        <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.flowRank ?? "—")}</div>
                       </div>
-                      <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                        <div className="text-amber-500">Flow/day</div>
-                        <div className="text-amber-400 font-bold">{userStatsLoading ? "…" : (chainStats?.currentFlowPerDayUSDCx ? `${chainStats.currentFlowPerDayUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
+                      <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                        <div className="theme-text-secondary">Flow/day</div>
+                        <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.currentFlowPerDayUSDCx ? `${chainStats.currentFlowPerDayUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
                       </div>
-                      <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                        <div className="text-amber-500">Total Streamed</div>
-                        <div className="text-amber-400 font-bold">{userStatsLoading ? "…" : (chainStats?.totalStreamedUSDCx ? `${chainStats.totalStreamedUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
+                      <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                        <div className="theme-text-secondary">Total Streamed</div>
+                        <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.totalStreamedUSDCx ? `${chainStats.totalStreamedUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
                       </div>
-                      <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                        <div className="text-amber-500">Rank (Volume)</div>
-                        <div className="text-amber-400 font-bold">{userStatsLoading ? "…" : (chainStats?.volumeRank ?? "—")}</div>
+                      <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                        <div className="theme-text-secondary">Rank (Volume)</div>
+                        <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.volumeRank ?? "—")}</div>
                       </div>
-                      <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                        <div className="text-amber-500">Stream Since</div>
-                        <div className="text-amber-400 font-bold">{chainStats?.activeStreamSince ? new Date(chainStats.activeStreamSince * 1000).toLocaleDateString() : "—"}</div>
+                      <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                        <div className="theme-text-secondary">Stream Since</div>
+                        <div className="theme-text-primary font-bold">{chainStats?.activeStreamSince ? new Date(chainStats.activeStreamSince * 1000).toLocaleDateString() : "—"}</div>
                       </div>
                     </div>
                   </div>
@@ -222,7 +235,7 @@ function MainView() {
                       <span>Connection:</span>
                       <span className="text-red-400">DISCONNECTED</span>
                     </div>
-                    <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full bg-amber-600 hover:bg-amber-700 text-black font-bold">
+                    <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full theme-button text-black font-bold">
                       {isFarcasterConnecting ? "CONNECTING..." : "CONNECT FARCASTER"}
                     </Button>
                     <div className="w-full">
@@ -234,53 +247,57 @@ function MainView() {
             )}
           </div>
 
-          <div className="bg-gray-900 border border-amber-600 rounded-lg p-6">
-            <h2 className="text-xl font-bold mb-4 text-amber-400">TOKEN STATS</h2>
+          <div className="theme-card-bg theme-border rounded-lg p-6" style={{borderWidth: '1px'}}>
+            <h2 className="text-xl font-bold mb-4 theme-text-primary">TOKEN STATS</h2>
             {tokenStats && (
               <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                  <div className="text-amber-500">Active Streams (CFA)</div>
-                  <div className="text-amber-400 font-bold">{tokenStats.activeCFAStreams}</div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Active Streams (CFA)</div>
+                  <div className="theme-text-primary font-bold">{tokenStats.activeCFAStreams}</div>
                 </div>
-                <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                  <div className="text-amber-500">Total Outflow/day</div>
-                  <div className="text-amber-400 font-bold">{tokenStats.totalOutflowPerDay} {TOKEN_SYMBOL}</div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Total Outflow/day</div>
+                  <div className="theme-text-primary font-bold">{tokenStats.totalOutflowPerDay} {TOKEN_SYMBOL}</div>
                 </div>
-                <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                  <div className="text-amber-500">Total Streamed</div>
-                  <div className="text-amber-400 font-bold">{tokenStats.totalStreamed} {TOKEN_SYMBOL}</div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Total Streamed</div>
+                  <div className="theme-text-primary font-bold">{tokenStats.totalStreamed} {TOKEN_SYMBOL}</div>
                 </div>
-                <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                  <div className="text-amber-500">Total Supply</div>
-                  <div className="text-amber-400 font-bold">{tokenStats.totalSupply} {TOKEN_SYMBOL}</div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Total Supply</div>
+                  <div className="theme-text-primary font-bold">{tokenStats.totalSupply} {TOKEN_SYMBOL}</div>
                 </div>
-                <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                  <div className="text-amber-500">Pools / Indexes</div>
-                  <div className="text-amber-400 font-bold">{tokenStats.totalPools} / {tokenStats.totalIndexes}</div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Pools / Indexes</div>
+                  <div className="theme-text-primary font-bold">{tokenStats.totalPools} / {tokenStats.totalIndexes}</div>
                 </div>
-                <div className="bg-gray-800/50 rounded p-3 border border-amber-600/30">
-                  <div className="text-amber-500">Holders / Accounts</div>
-                  <div className="text-amber-400 font-bold">{tokenStats.holders} / {tokenStats.accounts}</div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Holders / Accounts</div>
+                  <div className="theme-text-primary font-bold">{tokenStats.holders} / {tokenStats.accounts}</div>
                 </div>
               </div>
             )}
             
           </div>
 
-          <div className="bg-gray-900 border border-amber-600 rounded-lg p-6 lg:col-span-2">
+          <EventsCard className="lg:col-span-1" />
+          
+          <div className="theme-card-bg theme-border rounded-lg p-6 lg:col-span-3" style={{borderWidth: '1px'}}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-amber-400">TOKEN LEADERBOARD ({TOKEN_SYMBOL})</h2>
+              <h2 className="text-xl font-bold theme-text-primary">TOKEN LEADERBOARD ({TOKEN_SYMBOL})</h2>
               <div className="flex gap-2 text-sm">
                 <button
                   type="button"
-                  className={`px-3 py-1 rounded border ${activeLeaderboardTab === "flow" ? "bg-amber-600 text-black border-amber-600" : "bg-transparent text-amber-400 border-amber-600/40"}`}
+                  className={`px-3 py-1 rounded border ${activeLeaderboardTab === "flow" ? "theme-button text-black theme-border" : "bg-transparent theme-text-primary theme-border"}`}
+                  style={{borderWidth: '1px'}}
                   onClick={() => setActiveLeaderboardTab("flow")}
                 >
                   Flow Rate
                 </button>
                 <button
                   type="button"
-                  className={`px-3 py-1 rounded border ${activeLeaderboardTab === "volume" ? "bg-amber-600 text-black border-amber-600" : "bg-transparent text-amber-400 border-amber-600/40"}`}
+                  className={`px-3 py-1 rounded border ${activeLeaderboardTab === "volume" ? "theme-button text-black theme-border" : "bg-transparent theme-text-primary theme-border"}`}
+                  style={{borderWidth: '1px'}}
                   onClick={() => setActiveLeaderboardTab("volume")}
                 >
                   Volume
@@ -289,32 +306,37 @@ function MainView() {
             </div>
 
             {isLoadingLeaders ? (
-              <div className="text-amber-600 text-center py-8">Loading leaderboard…</div>
+              <div className="theme-text-muted text-center py-8">Loading leaderboard…</div>
             ) : displayEntries.length > 0 ? (
               <div className="space-y-3">
                 {displayEntries.map((entry) => {
                   const p = profiles[entry.address.toLowerCase()];
-                  const name = p?.recommendedName || p?.ENS?.handle || p?.Farcaster?.handle || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`;
+                  const name = p?.recommendedName || p?.ENS?.handle || p?.Farcaster?.handle || shortenAddress(entry.address);
                   const avatar = p?.recommendedAvatar || p?.Farcaster?.avatarUrl || p?.ENS?.avatarUrl || "/placeholder.svg";
                   return (
-                  <div key={`${activeLeaderboardTab}-${entry.rank}-${entry.address}`} className={`flex items-center justify-between p-3 rounded ${entry.isYou ? "bg-amber-500/10 border border-amber-500/30" : "bg-gray-800/50"}`}>
+                  <div key={`${activeLeaderboardTab}-${entry.rank}-${entry.address}`} className={`flex items-center justify-between p-3 rounded ${entry.isYou ? "theme-button border theme-border" : "theme-card-bg"}`} style={entry.isYou ? {borderWidth: '1px'} : {}}>
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-sm">#{entry.rank}</div>
-                      <img src={avatar} alt="avatar" className="w-6 h-6 rounded-full border border-amber-600" />
-                      <span className="text-amber-400 break-all">{name}</span>
-                      <button
-                        type="button"
-                        onClick={() => navigator.clipboard.writeText(entry.address)}
-                        className="text-xs px-2 py-0.5 rounded border border-amber-600/40 text-amber-400 hover:bg-amber-600 hover:text-black"
-                        title="Copy address"
-                      >
-                        Copy
-                      </button>
-                      {entry.isYou && <span className="text-xs bg-amber-500 text-black px-2 py-1 rounded font-bold">YOU</span>}
+                      <div className="w-8 h-8 rounded theme-button flex items-center justify-center theme-text-primary font-bold text-sm">#{entry.rank}</div>
+                      <img src={avatar} alt="avatar" className="w-6 h-6 rounded-full border theme-border" />
+                      <div className="flex-1 min-w-0">
+                        <div className="theme-text-primary font-medium">{name}</div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyAddress(entry.address)}
+                          className="flex items-center gap-1 theme-text-secondary text-xs hover:theme-text-primary transition-colors cursor-pointer group max-w-full"
+                          title="Click to copy address"
+                        >
+                          <span className="font-mono">{shortenAddress(entry.address)}</span>
+                          <span className="text-[10px] opacity-60 group-hover:opacity-100 flex-shrink-0">
+                            {copiedAddress === entry.address ? '✓' : '📋'}
+                          </span>
+                        </button>
+                      </div>
+                      {entry.isYou && <span className="text-xs theme-button text-black px-2 py-1 rounded font-bold">YOU</span>}
                     </div>
                     <div className="text-right">
-                      <div className="text-amber-400 font-bold">{entry.value}</div>
-                      <div className="text-amber-600 text-xs">{activeLeaderboardTab === "flow" ? "per day" : "total streamed"}</div>
+                      <div className="theme-text-primary font-bold">{entry.value}</div>
+                      <div className="theme-text-muted text-xs">{activeLeaderboardTab === "flow" ? "per day" : "total streamed"}</div>
                     </div>
                   </div>
                   );
@@ -324,27 +346,31 @@ function MainView() {
                     type="button"
                     disabled={page === 0}
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    className={`px-3 py-1 rounded border ${page === 0 ? "border-amber-600/20 text-amber-600/40" : "border-amber-600/60 text-amber-400 hover:bg-amber-600 hover:text-black"}`}
+                    className={`px-3 py-1 rounded border ${page === 0 ? "theme-border theme-text-muted" : "theme-border theme-text-primary hover:theme-button hover:text-black"}`}
+                    style={{borderWidth: '1px'}}
                   >
                     Prev
                   </button>
-                  <div className="text-xs text-amber-500">Page {page + 1}</div>
+                  <div className="text-xs theme-text-secondary">Page {page + 1}</div>
                   <button
                     type="button"
                     disabled={activeLeaderboardTab === "flow" ? !hasNextFlow : !hasNextVolume}
                     onClick={() => setPage((p) => p + 1)}
-                    className={`px-3 py-1 rounded border ${(activeLeaderboardTab === "flow" ? !hasNextFlow : !hasNextVolume) ? "border-amber-600/20 text-amber-600/40" : "border-amber-600/60 text-amber-400 hover:bg-amber-600 hover:text-black"}`}
+                    className={`px-3 py-1 rounded border ${(activeLeaderboardTab === "flow" ? !hasNextFlow : !hasNextVolume) ? "theme-border theme-text-muted" : "theme-border theme-text-primary hover:theme-button hover:text-black"}`}
+                    style={{borderWidth: '1px'}}
                   >
                     Next
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-amber-600 text-center py-8">No data</div>
+              <div className="theme-text-muted text-center py-8">No data</div>
             )}
           </div>
 
           <TokenChart className="lg:col-span-2" />
+          
+          <StremeCard className="lg:col-span-1" />
         </div>
       </div>
     </div>

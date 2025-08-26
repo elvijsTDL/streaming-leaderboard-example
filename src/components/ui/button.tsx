@@ -18,6 +18,12 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Theme-aware variants
+        theme: "theme-button text-black shadow-xs hover:opacity-90",
+        themeOutline: "border theme-border bg-transparent theme-text-primary hover:theme-button hover:text-black",
+        themeGhost: "hover:theme-button hover:text-black",
+        themeSuccess: "theme-success text-white shadow-xs hover:opacity-90",
+        themeError: "theme-error text-white shadow-xs hover:opacity-90",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

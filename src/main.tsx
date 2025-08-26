@@ -7,8 +7,14 @@ import { base } from "@reown/appkit/networks";
 import { wagmiAdapter, projectId } from "./wagmi";
 
 import App from "./App.tsx";
+import { generateThemeCSS } from "./lib/theme";
 
 import "./index.css";
+
+// Inject theme CSS variables
+const style = document.createElement('style');
+style.textContent = generateThemeCSS();
+document.head.appendChild(style);
 
 // Initialize AppKit modal (registers web components like <appkit-button />)
 if (!projectId) {

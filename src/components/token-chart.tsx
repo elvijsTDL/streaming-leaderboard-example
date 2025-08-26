@@ -24,6 +24,7 @@ export function TokenChart({ className = "" }: TokenChartProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isConnected, connectWallet } = useWallet();
+  const [showCopiedTooltip, setShowCopiedTooltip] = useState(false);
   const [tokenStats, setTokenStats] = useState<TokenStats>({
     price: "$0.00",
     priceChange24h: "0.00%",
@@ -120,22 +121,40 @@ export function TokenChart({ className = "" }: TokenChartProps) {
     window.open(uniswapUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(TOKEN_ADDRESS);
+      setShowCopiedTooltip(true);
+      setTimeout(() => setShowCopiedTooltip(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = TOKEN_ADDRESS;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShowCopiedTooltip(true);
+      setTimeout(() => setShowCopiedTooltip(false), 2000);
+    }
+  };
+
 
 
   // Token stats component
   const TokenStatsPanel = () => (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-bold text-amber-400 mb-3">Market Data</h3>
+        <h3 className="text-lg font-bold theme-text-primary mb-3">Market Data</h3>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-amber-500 text-sm">Price</span>
-            <span className="text-amber-400 font-bold">
+            <span className="theme-text-secondary text-sm">Price</span>
+            <span className="theme-text-primary font-bold">
               {tokenStats.isLoading ? "..." : tokenStats.price}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-amber-500 text-sm">24h Change</span>
+            <span className="theme-text-secondary text-sm">24h Change</span>
             <span className={`font-bold text-sm ${
               tokenStats.priceChange24h.startsWith('-') ? 'text-red-400' : 'text-green-400'
             }`}>
@@ -143,22 +162,22 @@ export function TokenChart({ className = "" }: TokenChartProps) {
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-amber-500 text-sm">Volume 24h</span>
-            <span className="text-amber-400 font-bold text-sm">
+            <span className="theme-text-secondary text-sm">Volume 24h</span>
+            <span className="theme-text-primary font-bold text-sm">
               {tokenStats.isLoading ? "..." : tokenStats.volume24h}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-amber-500 text-sm">Market Cap</span>
-            <span className="text-amber-400 font-bold text-sm">
+            <span className="theme-text-secondary text-sm">Market Cap</span>
+            <span className="theme-text-primary font-bold text-sm">
               {tokenStats.isLoading ? "..." : tokenStats.marketCap}
             </span>
           </div>
         </div>
       </div>
       
-             <div className="pt-4 border-t border-amber-600/30">
-         <h4 className="text-amber-400 font-bold mb-3">Trade</h4>
+             <div className="pt-4">
+         <h4 className="theme-text-primary font-bold mb-3">Trade</h4>
          <div className="space-y-2">
            <Button
              onClick={handleBuyToken}
@@ -175,8 +194,8 @@ export function TokenChart({ className = "" }: TokenChartProps) {
          </div>
        </div>
        
-       <div className="pt-4 border-t border-amber-600/30">
-         <h4 className="text-amber-400 font-bold mb-3">Links</h4>
+       <div className="pt-4">
+         <h4 className="theme-text-primary font-bold mb-3">Links</h4>
          <div className="grid grid-cols-2 gap-2">
            {/* Social Media Links */}
            {SOCIAL_LINKS.twitter && (
@@ -243,14 +262,17 @@ export function TokenChart({ className = "" }: TokenChartProps) {
            </a>
            
            <button
-             onClick={() => {
-               navigator.clipboard.writeText(TOKEN_ADDRESS);
-               // Could add a toast notification here
-             }}
-             className="flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors col-span-2"
+             onClick={handleCopyAddress}
+             className="flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors col-span-2 relative"
              title="Copy contract address to clipboard"
            >
              📋 Copy Contract Address
+             {showCopiedTooltip && (
+               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-600 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                 Copied!
+                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-l-2 border-r-2 border-t-2 border-transparent border-t-green-600"></div>
+               </div>
+             )}
            </button>
          </div>
        </div>
@@ -259,8 +281,8 @@ export function TokenChart({ className = "" }: TokenChartProps) {
 
   if (error) {
     return (
-      <div className={`bg-gray-900 border border-amber-600 rounded-lg p-6 ${className}`}>
-        <h2 className="text-xl font-bold mb-6 text-amber-400">{TOKEN_SYMBOL} Trading</h2>
+      <div className={`theme-card-bg theme-border rounded-lg p-6 ${className}`} style={{borderWidth: '1px'}}>
+        <h2 className="text-xl font-bold mb-6 theme-text-primary">{TOKEN_SYMBOL} Trading</h2>
         
         {/* Mobile: Stats on top, Chart below */}
         <div className="flex flex-col lg:flex-row lg:gap-6">
@@ -271,18 +293,18 @@ export function TokenChart({ className = "" }: TokenChartProps) {
           
           {/* Chart Panel - Full width on mobile, 2/3 on desktop */}
           <div className="lg:w-2/3">
-            <div className="bg-gray-800/50 rounded-lg border border-amber-600/30 p-4">
-              <div className="flex items-center justify-center h-64 lg:h-96 text-amber-600">
+            <div className="theme-card-bg rounded-lg border theme-border p-4" style={{borderWidth: '1px', opacity: '0.5'}}>
+              <div className="flex items-center justify-center h-64 lg:h-96 theme-text-muted">
                 <div className="text-center">
                   <div className="text-lg mb-2">Chart temporarily unavailable</div>
-                  <div className="text-sm text-amber-500">Unable to load price data</div>
+                  <div className="text-sm theme-text-secondary">Unable to load price data</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="mt-4 flex items-center justify-between text-xs text-amber-500">
+        <div className="mt-4 flex items-center justify-between text-xs theme-text-secondary">
           <div>
             Contract: {TOKEN_ADDRESS.slice(0, 6)}...{TOKEN_ADDRESS.slice(-4)}
           </div>
@@ -290,7 +312,7 @@ export function TokenChart({ className = "" }: TokenChartProps) {
             href={`https://dexscreener.com/base/${TOKEN_ADDRESS}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-amber-400 hover:text-amber-300 underline"
+            className="theme-text-primary hover:theme-text-primary underline"
           >
             View on DEXScreener
           </a>
@@ -300,8 +322,8 @@ export function TokenChart({ className = "" }: TokenChartProps) {
   }
 
   return (
-    <div className={`bg-gray-900 border border-amber-600 rounded-lg p-6 ${className}`}>
-      <h2 className="text-xl font-bold mb-6 text-amber-400">{TOKEN_SYMBOL} Trading</h2>
+    <div className={`theme-card-bg theme-border rounded-lg p-6 ${className}`} style={{borderWidth: '1px'}}>
+      <h2 className="text-xl font-bold mb-6 theme-text-primary">{TOKEN_SYMBOL} Trading</h2>
       
       {/* Mobile: Stats on top, Chart below - Desktop: Stats left (1/3), Chart right (2/3) */}
       <div className="flex flex-col lg:flex-row lg:gap-6">
@@ -312,19 +334,19 @@ export function TokenChart({ className = "" }: TokenChartProps) {
         
         {/* Chart Panel - Full width on mobile, 2/3 on desktop */}
         <div className="lg:w-2/3">
-          <div className="bg-gray-800/50 rounded-lg border border-amber-600/30 p-4">
-            <h3 className="text-lg font-bold text-amber-400 mb-3">Price Chart</h3>
+          <div className="theme-card-bg rounded-lg border theme-border p-4" style={{borderWidth: '1px'}}>
+            <h3 className="text-lg font-bold theme-text-primary mb-3">Price Chart</h3>
             
             {isLoading && (
-              <div className="flex items-center justify-center h-64 lg:h-96 text-amber-600">
+              <div className="flex items-center justify-center h-64 lg:h-96 theme-text-muted">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mx-auto mb-2"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 theme-border mx-auto mb-2"></div>
                   <div>Loading chart...</div>
                 </div>
               </div>
             )}
             
-            <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden border border-amber-600/20">
+            <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden border theme-border" style={{borderWidth: '1px'}}>
               <iframe
                 src={chartUrl}
                 width="100%"
