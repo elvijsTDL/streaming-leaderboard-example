@@ -14,7 +14,7 @@ import { AnalyticsPage } from "./pages/analytics-page";
 
 function MainView() {
   const { user: farcasterUser, isConnected: isFarcasterConnected, signIn: farcasterSignIn, signOut: farcasterSignOut, isConnecting: isFarcasterConnecting } = useFarcaster();
-  const { address, isConnected: isWalletConnected, flowRate, totalVolumeStreamed } = useWallet();
+  const { address, isConnected: isWalletConnected, totalVolumeStreamed } = useWallet();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<PageType>('stats');
 
@@ -108,7 +108,6 @@ function MainView() {
             isFarcasterConnecting={isFarcasterConnecting}
             isWalletConnected={isWalletConnected}
             address={address}
-            flowRate={flowRate}
             totalVolumeStreamed={totalVolumeStreamed}
             TOKEN_SYMBOL={TOKEN_SYMBOL}
             tokenStats={tokenStats}
@@ -138,7 +137,6 @@ function MainView() {
           isFarcasterConnecting={isFarcasterConnecting}
           isWalletConnected={isWalletConnected}
           address={address}
-          flowRate={flowRate}
           totalVolumeStreamed={totalVolumeStreamed}
           TOKEN_SYMBOL={TOKEN_SYMBOL}
           tokenStats={tokenStats}

@@ -11,7 +11,6 @@ interface DashboardPageProps {
   isFarcasterConnecting: boolean;
   isWalletConnected: boolean;
   address: string | null;
-  flowRate: string;
   totalVolumeStreamed: string;
   TOKEN_SYMBOL: string;
   // Token stats props
@@ -27,7 +26,6 @@ export function DashboardPage({
   isFarcasterConnecting,
   isWalletConnected,
   address,
-  flowRate,
   totalVolumeStreamed,
   TOKEN_SYMBOL,
   tokenStats,
@@ -43,7 +41,6 @@ export function DashboardPage({
         isFarcasterConnecting={isFarcasterConnecting}
         isWalletConnected={isWalletConnected}
         address={address}
-        flowRate={flowRate}
         totalVolumeStreamed={totalVolumeStreamed}
         TOKEN_SYMBOL={TOKEN_SYMBOL}
       />

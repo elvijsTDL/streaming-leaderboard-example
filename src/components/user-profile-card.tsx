@@ -16,7 +16,6 @@ interface UserProfileCardProps {
   isFarcasterConnecting: boolean;
   isWalletConnected: boolean;
   address: string | null;
-  flowRate: string;
   totalVolumeStreamed: string;
   TOKEN_SYMBOL: string;
 }
@@ -30,7 +29,6 @@ export function UserProfileCard({
   isFarcasterConnecting,
   isWalletConnected,
   address,
-  flowRate,
   TOKEN_SYMBOL,
 }: UserProfileCardProps) {
   // Internal state for copy functionality
@@ -77,60 +75,97 @@ export function UserProfileCard({
       <h2 className="text-xl font-bold mb-4 theme-text-primary">USER PROFILE</h2>
       {isFarcasterConnected && farcasterUser ? (
         <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-            <img src={farcasterUser.pfpUrl || "/placeholder.svg"} alt="Profile" className="w-10 h-10 rounded-full border theme-border" />
-            <div>
-              <div className="theme-text-primary font-bold">@{farcasterUser.username}</div>
-              <div className="theme-text-secondary text-sm">{farcasterUser.displayName}</div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="theme-card-bg rounded p-2 border theme-border" style={{borderWidth: '1px'}}>
-              <div className="theme-text-secondary">Followers</div>
-              <div className="theme-text-primary font-bold">{farcasterUser.followerCount}</div>
-            </div>
-            <div className="theme-card-bg rounded p-2 border theme-border" style={{borderWidth: '1px'}}>
-              <div className="theme-text-secondary">Following</div>
-              <div className="theme-text-primary font-bold">{farcasterUser.followingCount}</div>
-            </div>
-          </div>
-          {/* Token stats moved next to profile */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-              <div className="theme-text-secondary">Rank</div>
-              <div className="theme-text-primary font-bold">#3</div>
-            </div>
-            <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-              <div className="theme-text-secondary">{TOKEN_SYMBOL} Balance</div>
-              <div className="theme-text-primary font-bold">
-                {isWalletConnected ? (
-                  isBalanceLoading ? "..." : `${formattedTokenBalance} ${TOKEN_SYMBOL}`
-                ) : `0 ${TOKEN_SYMBOL}`}
+          {/* Enhanced Farcaster Profile Section */}
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <img src={farcasterUser.pfpUrl || "/placeholder.svg"} alt="Profile" className="w-12 h-12 rounded-full border-2 theme-border" />
+              <div className="flex-1">
+                <div className="theme-text-primary font-bold text-lg">{farcasterUser.displayName}</div>
+                <div className="theme-text-secondary text-sm">@{farcasterUser.username}</div>
+                <div className="theme-text-muted text-xs">FID: {farcasterUser.fid}</div>
               </div>
             </div>
-            <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-              <div className="theme-text-secondary">Flow Rate</div>
-              <div className="theme-text-primary font-bold">{isWalletConnected ? flowRate : "0.000 ETH/day"}</div>
+            
+            {/* Farcaster Social Stats */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">Followers</div>
+                <div className="theme-text-primary font-bold">{farcasterUser.followerCount?.toLocaleString() || "0"}</div>
+              </div>
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">Following</div>
+                <div className="theme-text-primary font-bold">{farcasterUser.followingCount?.toLocaleString() || "0"}</div>
+              </div>
             </div>
-            <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-              <div className="theme-text-secondary">Total Streamed</div>
-              <div className="theme-text-primary font-bold">
-                {isWalletConnected && streamingData ? (
-                  <StreamingBalance
-                    initialBalance={streamingData.totalAmountStreamedUntilUpdatedAt}
-                    initialTimestamp={streamingData.updatedAtTimestamp}
-                    flowRatePerSecond={streamingData.totalOutflowRate}
-                    symbol={TOKEN_SYMBOL}
-                    className="font-bold"
-                  />
-                ) : (
-                  `0.000 ${TOKEN_SYMBOL}`
-                )}
+            
+            {/* Show wallet address if connected */}
+            {isWalletConnected && address && (
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary text-sm mb-1">Connected Wallet</div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyAddress(address)}
+                  className="flex items-center gap-2 theme-text-primary hover:theme-text-secondary transition-colors cursor-pointer group font-mono text-sm"
+                  title="Click to copy address"
+                >
+                  <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
+                  <span className="text-xs opacity-60 group-hover:opacity-100">
+                    {copiedAddress === address ? '✓' : '📋'}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Streaming & Token Stats for Farcaster Users */}
+          <div className="space-y-3">
+            <div className="theme-text-primary font-semibold text-sm border-b theme-border pb-1">STREAMING STATS</div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">Flow Rank</div>
+                <div className="theme-text-primary font-bold">{chainStats?.flowRank ? `#${chainStats.flowRank}` : (userStatsLoading ? "..." : "—")}</div>
+              </div>
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">Volume Rank</div>
+                <div className="theme-text-primary font-bold">{chainStats?.volumeRank ? `#${chainStats.volumeRank}` : (userStatsLoading ? "..." : "—")}</div>
+              </div>
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">{TOKEN_SYMBOL} Balance</div>
+                <div className="theme-text-primary font-bold">
+                  {isWalletConnected ? (
+                    isBalanceLoading ? "..." : `${formattedTokenBalance} ${TOKEN_SYMBOL}`
+                  ) : `0 ${TOKEN_SYMBOL}`}
+                </div>
+              </div>
+              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">Flow Rate/day</div>
+                <div className="theme-text-primary font-bold">
+                  {isWalletConnected ? (
+                    userStatsLoading ? "..." : (chainStats?.currentFlowPerDayUSDCx ? `${chainStats.currentFlowPerDayUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)
+                  ) : `0 ${TOKEN_SYMBOL}`}
+                </div>
+              </div>
+              <div className="theme-card-bg rounded p-3 border theme-border col-span-2" style={{borderWidth: '1px'}}>
+                <div className="theme-text-secondary">Total Streamed</div>
+                <div className="theme-text-primary font-bold">
+                  {isWalletConnected && streamingData ? (
+                    <StreamingBalance
+                      initialBalance={streamingData.totalAmountStreamedUntilUpdatedAt}
+                      initialTimestamp={streamingData.updatedAtTimestamp}
+                      flowRatePerSecond={streamingData.totalOutflowRate}
+                      symbol={TOKEN_SYMBOL}
+                      className="font-bold"
+                    />
+                  ) : (
+                    userStatsLoading ? "..." : (chainStats?.totalStreamedUSDCx ? `${chainStats.totalStreamedUSDCx} ${TOKEN_SYMBOL}` : `0.000 ${TOKEN_SYMBOL}`)
+                  )}
+                </div>
               </div>
             </div>
           </div>
+
           <Button onClick={farcasterSignOut} variant="outline" className="w-full theme-border theme-text-primary hover:theme-button hover:text-black bg-transparent" style={{borderWidth: '1px'}}>
-            DISCONNECT
+            DISCONNECT FARCASTER
           </Button>
         </div>
       ) : (
