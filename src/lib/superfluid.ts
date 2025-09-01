@@ -25,6 +25,13 @@ export interface LeaderboardEntry {
   value: string; // raw BigInt string (per-second for flow; token units for volume)
 }
 
+export interface VolumeLeaderboardEntry {
+  account: string;
+  totalAmountStreamedUntilUpdatedAt: string;
+  updatedAtTimestamp: string;
+  totalOutflowRate: string;
+}
+
 export interface TokenStatistics {
   totalNumberOfActiveStreams: number;
   totalCFANumberOfActiveStreams: number;
@@ -38,6 +45,7 @@ export interface TokenStatistics {
   totalGDAOutflowRate: string; // per-second, raw
   totalAmountStreamedUntilUpdatedAt: string; // token units raw
   totalSupply: string; // token units raw
+  updatedAtTimestamp: string; // timestamp when stats were last updated
 }
 
 export async function fetchTokenStatistics(tokenAddress: string): Promise<TokenStatistics | null> {
@@ -56,6 +64,7 @@ export async function fetchTokenStatistics(tokenAddress: string): Promise<TokenS
         totalGDAOutflowRate
         totalAmountStreamedUntilUpdatedAt
         totalSupply
+        updatedAtTimestamp
       }
     }
   `;
@@ -70,14 +79,17 @@ export async function fetchTokenStatistics(tokenAddress: string): Promise<TokenS
     tokenStatistic: null | {
       totalNumberOfActiveStreams: number;
       totalCFANumberOfActiveStreams: number;
+      totalGDANumberOfActiveStreams: number;
       totalNumberOfPools: number;
       totalNumberOfIndexes: number;
       totalNumberOfHolders: number;
       totalNumberOfAccounts: number;
       totalOutflowRate: string;
       totalCFAOutflowRate: string;
+      totalGDAOutflowRate: string;
       totalAmountStreamedUntilUpdatedAt: string;
       totalSupply: string;
+      updatedAtTimestamp: string;
     };
   }>;
 
@@ -89,14 +101,17 @@ export async function fetchTokenStatistics(tokenAddress: string): Promise<TokenS
     ? {
         totalNumberOfActiveStreams: json.data.tokenStatistic.totalNumberOfActiveStreams,
         totalCFANumberOfActiveStreams: json.data.tokenStatistic.totalCFANumberOfActiveStreams,
+        totalGDANumberOfActiveStreams: json.data.tokenStatistic.totalGDANumberOfActiveStreams,
         totalNumberOfPools: json.data.tokenStatistic.totalNumberOfPools,
         totalNumberOfIndexes: json.data.tokenStatistic.totalNumberOfIndexes,
         totalNumberOfHolders: json.data.tokenStatistic.totalNumberOfHolders,
         totalNumberOfAccounts: json.data.tokenStatistic.totalNumberOfAccounts,
         totalOutflowRate: json.data.tokenStatistic.totalOutflowRate,
         totalCFAOutflowRate: json.data.tokenStatistic.totalCFAOutflowRate,
+        totalGDAOutflowRate: json.data.tokenStatistic.totalGDAOutflowRate,
         totalAmountStreamedUntilUpdatedAt: json.data.tokenStatistic.totalAmountStreamedUntilUpdatedAt,
         totalSupply: json.data.tokenStatistic.totalSupply,
+        updatedAtTimestamp: json.data.tokenStatistic.updatedAtTimestamp,
       }
     : null;
 }
@@ -144,6 +159,48 @@ export async function fetchTopFlowRateLeaders(
   }));
 }
 
+export async function fetchTopVolumeLeadersWithStreaming(
+  tokenAddress: string,
+  first = 10,
+  skip = 0,
+): Promise<VolumeLeaderboardEntry[]> {
+  const query = `
+    query TopVolumeStreaming($token: String!, $first: Int!, $skip: Int!) {
+      accountTokenSnapshots(
+        where: { token: $token, totalCFAAmountStreamedOutUntilUpdatedAt_gt: 0 }
+        orderBy: totalCFAAmountStreamedOutUntilUpdatedAt
+        orderDirection: desc
+        first: $first
+        skip: $skip
+      ) {
+        account { id }
+        totalCFAAmountStreamedOutUntilUpdatedAt
+        updatedAtTimestamp
+        totalCFAOutflowRate
+      }
+    }
+  `;
+
+  const res = await fetch(SUPERFLUID_SUBGRAPH_BASE, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ query, variables: { token: tokenAddress.toLowerCase(), first, skip } }),
+  });
+
+  const json: GraphQlResponse<{ accountTokenSnapshots: { account: { id: string }; totalCFAAmountStreamedOutUntilUpdatedAt: string; updatedAtTimestamp: string; totalCFAOutflowRate: string; }[] }> = await res.json();
+
+  if (json.errors) {
+    throw new Error(json.errors.map((e) => e.message).join("; "));
+  }
+
+  return (json.data?.accountTokenSnapshots ?? []).map((s) => ({
+    account: s.account.id,
+    totalAmountStreamedUntilUpdatedAt: s.totalCFAAmountStreamedOutUntilUpdatedAt,
+    updatedAtTimestamp: s.updatedAtTimestamp,
+    totalOutflowRate: s.totalCFAOutflowRate,
+  }));
+}
+
 export async function fetchTopVolumeLeaders(
   tokenAddress: string,
   first = 10,
@@ -160,6 +217,8 @@ export async function fetchTopVolumeLeaders(
       ) {
         account { id }
         totalCFAAmountStreamedOutUntilUpdatedAt
+        updatedAtTimestamp
+        totalCFAOutflowRate
       }
     }
   `;
@@ -479,28 +538,66 @@ export interface TokenEvent {
   timestamp: string;
   transactionHash: string;
   name: string;
-  addresses: string[];
+  // Transfer event fields
+  from?: string;
+  to?: string;
+  value?: string;
+  // Flow event fields
+  sender?: string;
+  receiver?: string;
+  flowRate?: string;
+  oldFlowRate?: string;
+  // Pool event fields
+  pool?: string;
+  poolMember?: string;
+  admin?: string;
+  actualAmount?: string;
+  attemptedAmount?: string;
+  // Index event fields
+  publisher?: string;
+  indexId?: string;
+  // Common field
   token: string;
-  userData?: string;
 }
 
-export async function fetchTokenEvents(tokenAddress: string, first = 10): Promise<TokenEvent[]> {
+// CFA Streams Interface
+export interface CFAStream {
+  id: string;
+  sender: string;
+  receiver: string;
+  token: string;
+  flowRate: string;
+  createdAtTimestamp: string;
+  updatedAtTimestamp: string;
+  currentFlowRate: string;
+}
+
+export async function fetchCFAStreams(tokenAddress: string, first = 10, skip = 0): Promise<CFAStream[]> {
   const query = `
-    query TokenEvents($token: String!, $first: Int!) {
-      events(
-        where: { token: $token }
-        orderBy: timestamp
+    query CFAStreams($token: String!, $first: Int!, $skip: Int!) {
+      streams(
+        where: { 
+          currentFlowRate_gt: "0"
+          token: $token
+        }
+        orderBy: updatedAtTimestamp
         orderDirection: desc
         first: $first
+        skip: $skip
       ) {
         id
-        blockNumber
-        timestamp
-        transactionHash
-        name
-        addresses
-        token
-        userData
+        sender {
+          id
+        }
+        receiver {
+          id
+        }
+        token {
+          id
+        }
+        currentFlowRate
+        createdAtTimestamp
+        updatedAtTimestamp
       }
     }
   `;
@@ -513,7 +610,8 @@ export async function fetchTokenEvents(tokenAddress: string, first = 10): Promis
         query, 
         variables: { 
           token: tokenAddress.toLowerCase(),
-          first 
+          first,
+          skip 
         } 
       }),
     });
@@ -529,9 +627,288 @@ export async function fetchTokenEvents(tokenAddress: string, first = 10): Promis
       return [];
     }
 
-    return result.data?.events || [];
+    // Map the nested structure to flat structure
+    const streams = (result.data?.streams || []).map((stream: any) => ({
+      id: stream.id,
+      sender: stream.sender.id,
+      receiver: stream.receiver.id,
+      token: stream.token.id,
+      flowRate: stream.currentFlowRate,
+      createdAtTimestamp: stream.createdAtTimestamp,
+      updatedAtTimestamp: stream.updatedAtTimestamp,
+      currentFlowRate: stream.currentFlowRate,
+    }));
+
+    return streams;
   } catch (error) {
-    console.error("Error fetching token events:", error);
+    console.error("Error fetching CFA streams:", error);
+    return [];
+  }
+}
+
+// Account Streaming Data Interface
+export interface AccountStreamingData {
+  totalAmountStreamedUntilUpdatedAt: string;
+  updatedAtTimestamp: string;
+  totalOutflowRate: string;
+  totalInflowRate: string;
+}
+
+export async function fetchAccountStreamingData(tokenAddress: string, accountAddress: string): Promise<AccountStreamingData | null> {
+  const query = `
+    query AccountStreamingData($token: String!, $account: String!) {
+      accountTokenSnapshots(
+        where: { 
+          token: $token
+          account: $account
+        }
+        first: 1
+      ) {
+        totalAmountStreamedUntilUpdatedAt
+        totalOutflowRate
+        totalInflowRate
+        updatedAtTimestamp
+      }
+    }
+  `;
+
+  try {
+    const res = await fetch(SUPERFLUID_SUBGRAPH_BASE, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        query,
+        variables: {
+          token: tokenAddress.toLowerCase(),
+          account: accountAddress.toLowerCase(),
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const result = await res.json();
+
+    if (result.errors) {
+      console.error("GraphQL errors (account streaming data):", result.errors);
+      return null;
+    }
+
+    const snapshot = result.data?.accountTokenSnapshots?.[0];
+    return snapshot || null;
+  } catch (error) {
+    console.error("Error fetching account streaming data:", error);
+    return null;
+  }
+}
+
+export async function fetchTokenEvents(tokenAddress: string, first = 10): Promise<TokenEvent[]> {
+  const transferQuery = `
+    query TransferEvents($token: String!, $first: Int!) {
+      transferEvents(
+        where: { token: $token }
+        orderBy: timestamp
+        orderDirection: desc
+        first: $first
+      ) {
+        id
+        blockNumber
+        timestamp
+        transactionHash
+        from
+        to
+        token
+        value
+      }
+    }
+  `;
+
+  const flowQuery = `
+    query FlowEvents($token: String!, $first: Int!) {
+      flowUpdatedEvents(
+        where: { token: $token }
+        orderBy: timestamp
+        orderDirection: desc
+        first: $first
+      ) {
+        id
+        blockNumber
+        timestamp
+        transactionHash
+        sender
+        receiver
+        token
+        flowRate
+        oldFlowRate
+      }
+    }
+  `;
+
+  const poolCreatedQuery = `
+    query PoolCreatedEvents($token: String!, $first: Int!) {
+      poolCreatedEvents(
+        where: { token: $token }
+        orderBy: timestamp
+        orderDirection: desc
+        first: $first
+      ) {
+        id
+        blockNumber
+        timestamp
+        transactionHash
+        token
+        admin
+        pool
+      }
+    }
+  `;
+
+  const poolDistributionQuery = `
+    query PoolDistributionEvents($token: String!, $first: Int!) {
+      poolDistributionEvents(
+        where: { token: $token }
+        orderBy: timestamp
+        orderDirection: desc
+        first: $first
+      ) {
+        id
+        blockNumber
+        timestamp
+        transactionHash
+        token
+        pool
+        poolMember
+        actualAmount
+        attemptedAmount
+      }
+    }
+  `;
+
+  const indexCreatedQuery = `
+    query IndexCreatedEvents($token: String!, $first: Int!) {
+      indexCreatedEvents(
+        where: { token: $token }
+        orderBy: timestamp
+        orderDirection: desc
+        first: $first
+      ) {
+        id
+        blockNumber
+        timestamp
+        transactionHash
+        token
+        publisher
+        indexId
+      }
+    }
+  `;
+
+  try {
+    // Fetch all event types
+    const eventsPerType = Math.ceil(first / 5); // Distribute across 5 event types
+    const [transferResponse, flowResponse, poolCreatedResponse, poolDistributionResponse, indexCreatedResponse] = await Promise.all([
+      fetch(SUPERFLUID_SUBGRAPH_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: transferQuery,
+          variables: { token: tokenAddress.toLowerCase(), first: eventsPerType },
+        }),
+      }),
+      fetch(SUPERFLUID_SUBGRAPH_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: flowQuery,
+          variables: { token: tokenAddress.toLowerCase(), first: eventsPerType },
+        }),
+      }),
+      fetch(SUPERFLUID_SUBGRAPH_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: poolCreatedQuery,
+          variables: { token: tokenAddress.toLowerCase(), first: eventsPerType },
+        }),
+      }),
+      fetch(SUPERFLUID_SUBGRAPH_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: poolDistributionQuery,
+          variables: { token: tokenAddress.toLowerCase(), first: eventsPerType },
+        }),
+      }),
+      fetch(SUPERFLUID_SUBGRAPH_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: indexCreatedQuery,
+          variables: { token: tokenAddress.toLowerCase(), first: eventsPerType },
+        }),
+      })
+    ]);
+
+    const [transferResult, flowResult, poolCreatedResult, poolDistributionResult, indexCreatedResult] = await Promise.all([
+      transferResponse.json(),
+      flowResponse.json(),
+      poolCreatedResponse.json(),
+      poolDistributionResponse.json(),
+      indexCreatedResponse.json()
+    ]);
+
+    if (transferResult.errors) {
+      console.error('Transfer events GraphQL errors:', transferResult.errors);
+    }
+    if (flowResult.errors) {
+      console.error('Flow events GraphQL errors:', flowResult.errors);
+    }
+    if (poolCreatedResult.errors) {
+      console.error('Pool created events GraphQL errors:', poolCreatedResult.errors);
+    }
+    if (poolDistributionResult.errors) {
+      console.error('Pool distribution events GraphQL errors:', poolDistributionResult.errors);
+    }
+    if (indexCreatedResult.errors) {
+      console.error('Index created events GraphQL errors:', indexCreatedResult.errors);
+    }
+
+    // Combine and format events
+    const transferEvents: TokenEvent[] = (transferResult.data?.transferEvents || []).map((event: any) => ({
+      ...event,
+      name: 'Transfer'
+    }));
+
+    const flowEvents: TokenEvent[] = (flowResult.data?.flowUpdatedEvents || []).map((event: any) => ({
+      ...event,
+      name: 'FlowUpdated'
+    }));
+
+    const poolCreatedEvents: TokenEvent[] = (poolCreatedResult.data?.poolCreatedEvents || []).map((event: any) => ({
+      ...event,
+      name: 'PoolCreated'
+    }));
+
+    const poolDistributionEvents: TokenEvent[] = (poolDistributionResult.data?.poolDistributionEvents || []).map((event: any) => ({
+      ...event,
+      name: 'PoolDistribution'
+    }));
+
+    const indexCreatedEvents: TokenEvent[] = (indexCreatedResult.data?.indexCreatedEvents || []).map((event: any) => ({
+      ...event,
+      name: 'IndexCreated'
+    }));
+
+    // Combine all events and sort by timestamp
+    const allEvents = [...transferEvents, ...flowEvents, ...poolCreatedEvents, ...poolDistributionEvents, ...indexCreatedEvents];
+    allEvents.sort((a, b) => parseInt(b.timestamp) - parseInt(a.timestamp));
+
+    // Return only the requested number of events
+    return allEvents.slice(0, first);
+  } catch (error) {
+    console.error('Error fetching token events:', error);
     return [];
   }
 }

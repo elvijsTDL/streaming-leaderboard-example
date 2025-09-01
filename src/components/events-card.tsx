@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchTokenEvents, type TokenEvent, TOKEN_ADDRESS, TOKEN_SYMBOL } from "../lib/superfluid";
 import { shortenAddress } from "../lib/utils";
+import { formatUnits } from "viem";
 
 interface EventsCardProps {
   className?: string;
@@ -16,7 +17,7 @@ export function EventsCard({ className }: EventsCardProps) {
       try {
         setIsLoading(true);
         setError(null);
-        const tokenEvents = await fetchTokenEvents(TOKEN_ADDRESS, 10);
+        const tokenEvents = await fetchTokenEvents(TOKEN_ADDRESS, 5);
         setEvents(tokenEvents);
       } catch (err) {
         setError('Failed to load events');
@@ -43,14 +44,109 @@ export function EventsCard({ className }: EventsCardProps) {
   };
 
   const getEventIcon = (eventName: string) => {
-    const name = eventName.toLowerCase();
-    if (name.includes('flow') || name.includes('stream')) return '🌊';
-    if (name.includes('transfer')) return '💸';
-    if (name.includes('approval')) return '✅';
-    if (name.includes('pool') || name.includes('gda')) return '🏊';
-    if (name.includes('upgrade')) return '⬆️';
-    if (name.includes('agreement')) return '🤝';
-    return '📅';
+    switch (eventName) {
+      case 'FlowUpdated':
+        return '🌊';
+      case 'Transfer':
+        return '💸';
+      case 'PoolCreated':
+        return '🏊';
+      case 'PoolDistribution':
+        return '💰';
+      case 'IndexCreated':
+        return '📊';
+      default:
+        return '📅';
+    }
+  };
+
+  const formatEventValue = (event: TokenEvent) => {
+    if (event.name === 'Transfer' && event.value) {
+      try {
+        const value = formatUnits(BigInt(event.value), 18);
+        return `${Number(value).toLocaleString()} ${TOKEN_SYMBOL}`;
+      } catch {
+        return '';
+      }
+    }
+    if (event.name === 'FlowUpdated' && event.flowRate) {
+      try {
+        const flowRate = formatUnits(BigInt(event.flowRate), 18);
+        const perDay = Number(flowRate) * 86400; // seconds in a day
+        return `${perDay.toLocaleString()} ${TOKEN_SYMBOL}/day`;
+      } catch {
+        return '';
+      }
+    }
+    if (event.name === 'PoolDistribution' && event.actualAmount) {
+      try {
+        const amount = formatUnits(BigInt(event.actualAmount), 18);
+        return `${Number(amount).toLocaleString()} ${TOKEN_SYMBOL}`;
+      } catch {
+        return '';
+      }
+    }
+    return '';
+  };
+
+  // Function to check if an address might be Streme-related (basic heuristic)
+  const isStremeRelated = (_address: string) => {
+    // This is a simple check - in a real app you'd want to maintain a list of known Streme addresses
+    // For now, we'll check if it matches common patterns or known addresses
+    return false; // We'll enhance this when we have specific Streme addresses
+  };
+
+  const getEventDescription = (event: TokenEvent) => {
+    switch (event.name) {
+      case 'FlowUpdated':
+        if (event.flowRate === '0') {
+          return 'Flow stopped';
+        }
+        return `Flow: ${formatEventValue(event)}`;
+      case 'Transfer':
+        const value = formatEventValue(event);
+        let description = value ? `Transfer: ${value}` : 'Transfer';
+        
+        // Check if this might be a Streme-related transfer
+        if (event.to && isStremeRelated(event.to)) {
+          description = `🟣 Streme stake: ${value || ''}`;
+        } else if (event.from && isStremeRelated(event.from)) {
+          description = `🟣 Streme unstake: ${value || ''}`;
+        }
+        
+        return description;
+      case 'PoolCreated':
+        return 'Pool created';
+      case 'PoolDistribution':
+        const distributionValue = formatEventValue(event);
+        return distributionValue ? `Pool distribution: ${distributionValue}` : 'Pool distribution';
+      case 'IndexCreated':
+        return event.indexId ? `Index ${event.indexId} created` : 'Index created';
+      default:
+        return formatEventName(event.name);
+    }
+  };
+
+  const getEventAddresses = (event: TokenEvent) => {
+    const addresses: { label: string; address: string }[] = [];
+    
+    if (event.name === 'Transfer') {
+      if (event.from) addresses.push({ label: 'From', address: event.from });
+      if (event.to) addresses.push({ label: 'To', address: event.to });
+    } else if (event.name === 'FlowUpdated') {
+      if (event.sender) addresses.push({ label: 'Sender', address: event.sender });
+      if (event.receiver) addresses.push({ label: 'Receiver', address: event.receiver });
+    } else if (event.name === 'PoolCreated') {
+      if (event.admin) addresses.push({ label: 'Admin', address: event.admin });
+      if (event.pool) addresses.push({ label: 'Pool', address: event.pool });
+    } else if (event.name === 'PoolDistribution') {
+      if (event.pool) addresses.push({ label: 'Pool', address: event.pool });
+      if (event.poolMember) addresses.push({ label: 'Member', address: event.poolMember });
+    } else if (event.name === 'IndexCreated') {
+      if (event.publisher) addresses.push({ label: 'Publisher', address: event.publisher });
+    }
+    
+    return addresses;
   };
 
   const getExplorerUrl = (txHash: string) => {
@@ -87,22 +183,19 @@ export function EventsCard({ className }: EventsCardProps) {
     <div className={`theme-card-bg theme-border rounded-lg p-6 ${className}`} style={{borderWidth: '1px'}}>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold theme-text-primary">RECENT EVENTS</h2>
-        <div className="theme-text-secondary text-sm">Last 10 events</div>
+        <div className="theme-text-secondary text-sm">Last 5 events</div>
       </div>
 
       <div className="space-y-3">
-        {events.map((event, index) => (
+        {events.map((event) => (
           <div key={event.id} className="theme-card-bg rounded-lg p-4" style={{opacity: '1'}}>
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3 flex-1">
                 <div className="text-lg">{getEventIcon(event.name)}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
+                  <div className="mb-1">
                     <div className="theme-text-primary font-bold text-sm">
-                      {formatEventName(event.name)}
-                    </div>
-                    <div className="w-4 h-4 rounded theme-button flex items-center justify-center theme-text-primary font-bold text-xs">
-                      {index + 1}
+                      {getEventDescription(event)}
                     </div>
                   </div>
                   
@@ -110,24 +203,27 @@ export function EventsCard({ className }: EventsCardProps) {
                     {formatTimestamp(event.timestamp)}
                   </div>
                   
-                  {event.addresses && event.addresses.length > 0 && (
-                    <div className="space-y-1">
-                      {event.addresses.slice(0, 2).map((address, i) => (
-                        <div key={i} className="flex items-center space-x-2">
-                          <span className="theme-text-muted text-xs">
-                            {i === 0 ? 'From:' : 'To:'}
-                          </span>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(address)}
-                            className="theme-text-secondary text-xs hover:theme-text-primary cursor-pointer font-mono"
-                            title="Click to copy address"
-                          >
-                            {shortenAddress(address)}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {(() => {
+                    const addresses = getEventAddresses(event);
+                    return addresses.length > 0 && (
+                      <div className="space-y-1">
+                        {addresses.slice(0, 2).map((item, i) => (
+                          <div key={i} className="flex items-center space-x-2">
+                            <span className="theme-text-muted text-xs">
+                              {item.label}:
+                            </span>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(item.address)}
+                              className="theme-text-secondary text-xs hover:theme-text-primary cursor-pointer font-mono"
+                              title="Click to copy address"
+                            >
+                              {shortenAddress(item.address)}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               

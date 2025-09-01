@@ -151,7 +151,7 @@ export function StremeCard({ className = "" }: StremeCardProps) {
           <h3 className="text-lg font-bold theme-text-primary mb-3">Token Creator</h3>
           {stremeData.username && stremeData.username.trim() !== "" ? (
             <a
-              href={`https://warpcast.com/${stremeData.username}`}
+              href={`https://farcaster.xyz/${stremeData.username}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-3 p-3 rounded-lg theme-card-bg hover:theme-card-bg transition-colors group no-underline"
@@ -169,7 +169,7 @@ export function StremeCard({ className = "" }: StremeCardProps) {
                   @{stremeData.username}
                 </div>
                 <div className="theme-text-secondary text-sm">{stremeData.creator?.name || stremeData.username}</div>
-                <div className="theme-text-muted text-xs mt-1">Click to view on Warpcast →</div>
+                <div className="theme-text-muted text-xs mt-1">Click to view on Farcaster →</div>
               </div>
             </a>
           ) : (
