@@ -15,6 +15,63 @@ export const SOCIAL_LINKS = {
   website: (import.meta.env.VITE_WEBSITE_URL as string) ?? "",
 };
 
+// Debug function to test all API endpoints
+export async function debugAllEndpoints(tokenAddress: string = TOKEN_ADDRESS) {
+  console.log('🔍 Starting API endpoint debugging...');
+  console.log('🪙 Token address:', tokenAddress);
+  console.log('🌐 Environment:', {
+    NODE_ENV: import.meta.env.NODE_ENV,
+    PROD: import.meta.env.PROD,
+    DEV: import.meta.env.DEV,
+    BASE_URL: import.meta.env.BASE_URL,
+    MODE: import.meta.env.MODE
+  });
+  
+  // Test Superfluid subgraph
+  console.log('\n🟣 Testing Superfluid subgraph...');
+  try {
+    const tokenStats = await fetchTokenStatistics(tokenAddress);
+    console.log('✅ Superfluid subgraph working:', !!tokenStats);
+  } catch (error) {
+    console.error('❌ Superfluid subgraph failed:', error);
+  }
+  
+  // Test Streme API
+  console.log('\n🎯 Testing Streme API...');
+  try {
+    const stremeData = await fetchStremeTokenData(tokenAddress);
+    console.log('✅ Streme API working:', !!stremeData);
+  } catch (error) {
+    console.error('❌ Streme API failed:', error);
+  }
+  
+  // Test local API routes
+  console.log('\n🔧 Testing local API routes...');
+  const testRoutes = [
+    '/api/streme/tokens/single',
+    '/api/uniswap/graphql'
+  ];
+  
+  for (const route of testRoutes) {
+    try {
+      const response = await fetch(route, { method: 'GET' });
+      console.log(`📍 ${route}: ${response.status} ${response.statusText}`);
+    } catch (error) {
+      console.error(`❌ ${route}: ${error}`);
+    }
+  }
+  
+  console.log('\n🏁 API debugging complete');
+}
+
+// Call this function automatically in development
+if (import.meta.env.DEV) {
+  // Delay the debug call to avoid blocking app initialization
+  setTimeout(() => {
+    debugAllEndpoints().catch(console.error);
+  }, 3000);
+}
+
 type GraphQlResponse<T> = {
   data?: T;
   errors?: Array<{ message: string }>;
@@ -69,11 +126,30 @@ export async function fetchTokenStatistics(tokenAddress: string): Promise<TokenS
     }
   `;
 
+  console.log('🟣 Superfluid: Fetching token statistics for:', tokenAddress);
+  console.log('🌐 Superfluid endpoint:', SUPERFLUID_SUBGRAPH_BASE);
+  
   const res = await fetch(SUPERFLUID_SUBGRAPH_BASE, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ query, variables: { id: tokenAddress.toLowerCase() } }),
   });
+
+  console.log('🟣 Superfluid response status:', res.status, res.statusText);
+  
+  if (!res.ok) {
+    console.error(`❌ Superfluid subgraph error: ${res.status} ${res.statusText}`);
+    console.error('📍 URL:', res.url);
+    
+    try {
+      const errorText = await res.text();
+      console.error('💥 Superfluid error response:', errorText);
+    } catch (e) {
+      console.error('💥 Could not read Superfluid error response');
+    }
+    
+    throw new Error(`Superfluid API error: ${res.status}`);
+  }
 
   const json = (await res.json()) as GraphQlResponse<{
     tokenStatistic: null | {
@@ -325,7 +401,13 @@ export interface StremeTokenData {
 
 export async function fetchStremeTokenData(tokenAddress: string): Promise<StremeTokenData | null> {
   try {
-    const response = await fetch(`/api/streme/tokens/single?address=${tokenAddress.toLowerCase()}`, {
+    console.log('🎯 Attempting to fetch Streme data for token:', tokenAddress);
+    
+    // Try direct API call first (if available)
+    const directUrl = `https://api.streme.fun/tokens/single?address=${tokenAddress.toLowerCase()}`;
+    console.log('🌐 Direct API URL:', directUrl);
+    
+    let response = await fetch(directUrl, {
       method: 'GET',
       headers: {
         'accept': '*/*',
@@ -333,16 +415,40 @@ export async function fetchStremeTokenData(tokenAddress: string): Promise<Streme
       },
     });
 
+    // If direct call fails, try through local API proxy
     if (!response.ok) {
+      console.log('❌ Direct API failed, trying local proxy...');
+      const proxyUrl = `/api/streme/tokens/single?address=${tokenAddress.toLowerCase()}`;
+      console.log('🔄 Proxy URL:', proxyUrl);
+      
+      response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: {
+          'accept': '*/*',
+          'accept-language': 'en-US,en;q=0.9',
+        },
+      });
+    }
+
+    if (!response.ok) {
+      console.error(`❌ Streme API error: ${response.status} ${response.statusText}`);
+      console.error('📍 URL:', response.url);
       return null;
     }
 
     const result = await response.json();
+    console.log('✅ Streme API response:', result);
+    
     // The response might be wrapped in a 'data' property
     const data = result.data || result;
     return data as StremeTokenData;
   } catch (error) {
-    console.error('Error fetching Streme token data:', error);
+    console.error('💥 Error fetching Streme token data:', error);
+    console.error('🔍 Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return null;
   }
 }
@@ -443,6 +549,8 @@ export interface UniswapPoolData {
 
 export async function fetchUniswapPoolData(poolAddress: string): Promise<UniswapPoolData | null> {
   try {
+    console.log('🏊 Attempting to fetch Uniswap pool data for:', poolAddress);
+    
     const query = `
       query V3Pool($chain: Chain!, $address: String!) {
         v3Pool(chain: $chain, address: $address) {
@@ -498,7 +606,10 @@ export async function fetchUniswapPoolData(poolAddress: string): Promise<Uniswap
       }
     `;
 
-    const response = await fetch('/api/uniswap/graphql', {
+    const apiUrl = '/api/uniswap/graphql';
+    console.log('📊 Uniswap API URL:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -513,20 +624,40 @@ export async function fetchUniswapPoolData(poolAddress: string): Promise<Uniswap
       }),
     });
 
+    console.log('📊 Uniswap response status:', response.status, response.statusText);
+    console.log('📍 Uniswap response URL:', response.url);
+
     if (!response.ok) {
+      console.error(`❌ Uniswap API error: ${response.status} ${response.statusText}`);
+      console.error('📍 URL:', response.url);
+      
+      // Log response text for debugging
+      try {
+        const errorText = await response.text();
+        console.error('💥 Uniswap error response:', errorText);
+      } catch (e) {
+        console.error('💥 Could not read error response');
+      }
+      
       return null;
     }
 
     const result = await response.json();
+    console.log('✅ Uniswap API response:', result);
     
     if (result.errors) {
-      console.error('Uniswap GraphQL errors:', result.errors);
+      console.error('❌ Uniswap GraphQL errors:', result.errors);
       return null;
     }
 
     return result.data?.v3Pool || null;
   } catch (error) {
-    console.error('Error fetching Uniswap pool data:', error);
+    console.error('💥 Error fetching Uniswap pool data:', error);
+    console.error('🔍 Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return null;
   }
 }
