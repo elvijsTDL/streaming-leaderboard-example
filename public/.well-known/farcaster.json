@@ -7,13 +7,13 @@
     "frame": {
         "name": "Streaming Leaderboard",
         "version": "1",
-        "iconUrl": "https://streaming-leaderboard-example.vercel.app/image.png",
+        "iconUrl": "https://streaming-leaderboard-example.vercel.app/icon.png",
         "homeUrl": "https://streaming-leaderboard-example.vercel.app",
         "subtitle": "Stream is life, stream is love",
         "description": "Most go with the flow, but can you get to the top ?",
         "primaryCategory": "games",
-        "splashImageUrl": "https://streaming-leaderboard-example.vercel.app/splash.png",
-        "splashBackgroundColor": "#FFFFFF",
+        "splashImageUrl": "https://streaming-leaderboard-example.vercel.app/icon.png",
+        "splashBackgroundColor": "#2d1b69",
         "tags": [
           "streaming",
           "fun",
