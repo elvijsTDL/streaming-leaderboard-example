@@ -264,7 +264,7 @@ export function UserProfileCard({
                   <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full theme-button text-black font-bold">
                     {isFarcasterConnecting ? "CONNECTING..." : "CONNECT FARCASTER"}
                   </Button>
-                  {/* Frame wallet connection */}
+                  {/* Frame wallet connection following the official guide pattern */}
                   {!frameWalletConnected && frameConnectWallet && (
                     <Button 
                       onClick={frameConnectWallet} 

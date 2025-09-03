@@ -1,21 +1,34 @@
+import { useState } from "react";
+import { useAccount } from "wagmi";
 import { LeaderboardCard } from "../leaderboard-card";
 
-interface LeaderboardPageProps {
-  address: string | null;
-  copiedAddress: string | null;
-  handleCopyAddress: (address: string) => void;
-}
+export function LeaderboardPage() {
+  const { address } = useAccount();
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
-export function LeaderboardPage({
-  address,
-  copiedAddress,
-  handleCopyAddress,
-}: LeaderboardPageProps) {
+  const handleCopyAddress = async (addressToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(addressToCopy);
+      setCopiedAddress(addressToCopy);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = addressToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedAddress(addressToCopy);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-8">
       <LeaderboardCard
         className=""
-        address={address}
+        address={address ?? null}
         copiedAddress={copiedAddress}
         handleCopyAddress={handleCopyAddress}
       />

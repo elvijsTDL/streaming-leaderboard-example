@@ -121,17 +121,18 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Find the Farcaster frame connector
-      const farcasterConnector = connectors.find(
-        (connector) => connector.id === "farcasterFrame"
+      // Find the Farcaster MiniApp connector following the official guide
+      const miniAppConnector = connectors.find(
+        (connector) => connector.id === "farcasterMiniApp"
       );
 
-      if (farcasterConnector) {
-        console.log("🔗 Connecting wallet via Farcaster frame connector");
-        await connect({ connector: farcasterConnector });
+      if (miniAppConnector) {
+        console.log("🔗 Connecting wallet via Farcaster MiniApp connector");
+        await connect({ connector: miniAppConnector });
       } else {
-        setError("Farcaster frame connector not available");
-        console.error("❌ Farcaster frame connector not found");
+        setError("Farcaster MiniApp connector not available");
+        console.error("❌ Farcaster MiniApp connector not found");
+        console.log("Available connectors:", connectors.map(c => ({ id: c.id, name: c.name })));
       }
     } catch (err) {
       setError("Failed to connect wallet through frame");
