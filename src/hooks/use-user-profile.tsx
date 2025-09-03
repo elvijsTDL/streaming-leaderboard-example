@@ -14,8 +14,8 @@ import {
 interface UserChainStats {
   address: string;
   profile?: ResolvedProfile;
-  totalStreamedUSDCx?: string; // formatted token amount
-  currentFlowPerDayUSDCx?: string; // formatted token flow rate
+  totalStreamedToken?: string; // formatted token amount
+  currentFlowPerDayToken?: string; // formatted token flow rate
   flowRank?: number | null; // rank by current outflow rate
   volumeRank?: number | null; // rank by total streamed
   activeStreamSince?: number | null; // unix seconds
@@ -77,22 +77,22 @@ export function useUserProfile() {
         const { flowRank, volumeRank } = await computeRanks(address);
 
         // For the actual user's values, fetch a single page including the user by scanning pages until found
-        let currentFlowPerDayUSDCx: string | undefined;
-        let totalStreamedUSDCx: string | undefined;
+        let currentFlowPerDayToken: string | undefined;
+        let totalStreamedToken: string | undefined;
         const PAGE = 100;
         const MAX_PAGES = 20;
-        for (let p = 0; p < MAX_PAGES && (currentFlowPerDayUSDCx === undefined || totalStreamedUSDCx === undefined); p++) {
+        for (let p = 0; p < MAX_PAGES && (currentFlowPerDayToken === undefined || totalStreamedToken === undefined); p++) {
           const [flowPage, volumePage] = await Promise.all([
             fetchTopFlowRateLeaders(TOKEN_ADDRESS, PAGE, p * PAGE),
             fetchTopVolumeLeaders(TOKEN_ADDRESS, PAGE, p * PAGE),
           ]);
-          if (currentFlowPerDayUSDCx === undefined) {
+          if (currentFlowPerDayToken === undefined) {
             const f = flowPage.find((e) => e.account.toLowerCase() === address.toLowerCase());
-            if (f) currentFlowPerDayUSDCx = formatFlowRatePerDay(f.value);
+            if (f) currentFlowPerDayToken = formatFlowRatePerDay(f.value);
           }
-          if (totalStreamedUSDCx === undefined) {
+          if (totalStreamedToken === undefined) {
             const v = volumePage.find((e) => e.account.toLowerCase() === address.toLowerCase());
-            if (v) totalStreamedUSDCx = formatTokenAmount(v.value);
+            if (v) totalStreamedToken = formatTokenAmount(v.value);
           }
           if (flowPage.length < PAGE && volumePage.length < PAGE) break;
         }
@@ -102,8 +102,8 @@ export function useUserProfile() {
           setChainStats({
             address,
             profile: resolved,
-            currentFlowPerDayUSDCx,
-            totalStreamedUSDCx,
+            currentFlowPerDayToken,
+            totalStreamedToken,
             flowRank: flowRank ?? null,
             volumeRank: volumeRank ?? null,
             activeStreamSince: null, // Optional: StreamPeriod scan could be added here

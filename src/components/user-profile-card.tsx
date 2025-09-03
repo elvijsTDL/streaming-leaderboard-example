@@ -24,7 +24,7 @@ interface UserProfileCardProps {
   frameWalletConnected?: boolean;
   frameWalletConnecting?: boolean;
   frameConnectWallet?: () => Promise<void>;
-  frameDisconnectWallet?: () => void;
+
 }
 
 export function UserProfileCard({
@@ -42,7 +42,7 @@ export function UserProfileCard({
   frameWalletConnected,
   frameWalletConnecting,
   frameConnectWallet,
-  frameDisconnectWallet,
+
 }: UserProfileCardProps) {
   // Internal state for copy functionality
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
@@ -80,6 +80,8 @@ export function UserProfileCard({
         minimumFractionDigits: 0,
       })
     : "0";
+
+
 
   // Handle address copying
   const handleCopyAddress = (address: string) => {
@@ -121,7 +123,7 @@ export function UserProfileCard({
             {effectiveIsConnected && effectiveAddress && (
               <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
                 <div className="theme-text-secondary text-sm mb-1">
-                  {isInMiniApp && frameWalletConnected ? "Frame Wallet" : "Connected Wallet"}
+                  {"Connected Wallet"}
                 </div>
                 <button
                   type="button"
@@ -134,17 +136,6 @@ export function UserProfileCard({
                     {copiedAddress === effectiveAddress ? '✓' : '📋'}
                   </span>
                 </button>
-                {isInMiniApp && frameWalletConnected && frameDisconnectWallet && (
-                  <Button
-                    onClick={frameDisconnectWallet}
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 w-full theme-border theme-text-primary hover:theme-button hover:text-black bg-transparent text-xs"
-                    style={{borderWidth: '1px'}}
-                  >
-                    DISCONNECT WALLET
-                  </Button>
-                )}
               </div>
             )}
           </div>
@@ -173,7 +164,7 @@ export function UserProfileCard({
                 <div className="theme-text-secondary">Flow Rate/day</div>
                 <div className="theme-text-primary font-bold">
                   {isWalletConnected ? (
-                    userStatsLoading ? "..." : (chainStats?.currentFlowPerDayUSDCx ? `${chainStats.currentFlowPerDayUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)
+                    userStatsLoading ? "..." : (chainStats?.currentFlowPerDayToken ? `${chainStats.currentFlowPerDayToken} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)
                   ) : `0 ${TOKEN_SYMBOL}`}
                 </div>
               </div>
@@ -189,7 +180,7 @@ export function UserProfileCard({
                       className="font-bold"
                     />
                   ) : (
-                    userStatsLoading ? "..." : (chainStats?.totalStreamedUSDCx ? `${chainStats.totalStreamedUSDCx} ${TOKEN_SYMBOL}` : `0.000 ${TOKEN_SYMBOL}`)
+                    userStatsLoading ? "..." : (chainStats?.totalStreamedToken ? `${chainStats.totalStreamedToken} ${TOKEN_SYMBOL}` : `0.000 ${TOKEN_SYMBOL}`)
                   )}
                 </div>
               </div>
@@ -235,11 +226,11 @@ export function UserProfileCard({
                 </div>
                 <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
                   <div className="theme-text-secondary">Flow/day</div>
-                  <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.currentFlowPerDayUSDCx ? `${chainStats.currentFlowPerDayUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
+                  <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.currentFlowPerDayToken ? `${chainStats.currentFlowPerDayToken} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
                 </div>
                 <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
                   <div className="theme-text-secondary">Total Streamed</div>
-                  <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.totalStreamedUSDCx ? `${chainStats.totalStreamedUSDCx} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
+                  <div className="theme-text-primary font-bold">{userStatsLoading ? "…" : (chainStats?.totalStreamedToken ? `${chainStats.totalStreamedToken} ${TOKEN_SYMBOL}` : `0 ${TOKEN_SYMBOL}`)}</div>
                 </div>
                 <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
                   <div className="theme-text-secondary">Rank (Volume)</div>

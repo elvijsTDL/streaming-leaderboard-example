@@ -18,7 +18,7 @@ export function DashboardPage() {
     isWalletConnected: frameWalletConnected,
     isWalletConnecting: frameWalletConnecting,
     connectWallet: frameConnectWallet,
-    disconnectWallet: frameDisconnectWallet
+
   } = useFarcaster();
   
   const { address, isConnected: isWalletConnected, totalVolumeStreamed } = useWallet();
@@ -96,7 +96,7 @@ export function DashboardPage() {
         frameWalletConnected={frameWalletConnected}
         frameWalletConnecting={frameWalletConnecting}
         frameConnectWallet={frameConnectWallet}
-        frameDisconnectWallet={frameDisconnectWallet}
+
       />
 
       <TokenStatsCard
