@@ -2,21 +2,13 @@ import { useEffect, useState } from "react";
 import { formatUnits } from "viem";
 
 interface StreamingBalanceProps {
-  /** Initial balance at a specific timestamp (in wei/smallest unit) */
   initialBalance: string;
-  /** Timestamp when the initial balance was recorded (in seconds) */
   initialTimestamp: string;
-  /** Flow rate per second (in wei/smallest unit per second) */
   flowRatePerSecond: string;
-  /** Token decimals for formatting */
   decimals?: number;
-  /** Token symbol to display */
   symbol?: string;
-  /** Additional CSS classes */
   className?: string;
-  /** Whether to show decimals (default: 2) */
   decimalPlaces?: number;
-  /** Whether to animate the updates (default: true) */
   animate?: boolean;
 }
 
@@ -34,7 +26,7 @@ export function StreamingBalance({
 
   useEffect(() => {
     const updateBalance = () => {
-      const now = Date.now(); // Current timestamp in milliseconds
+      const now = Date.now(); 
       const elapsedMilliseconds = now - (parseInt(initialTimestamp) * 1000);
       const elapsedSeconds = elapsedMilliseconds / 1000; // Precise elapsed time in seconds
       
@@ -46,19 +38,19 @@ export function StreamingBalance({
       const elapsedTokens = flowRateBigInt * BigInt(Math.floor(elapsedSeconds * 1000)) / BigInt(1000);
       const currentBalanceBigInt = initialBigInt + elapsedTokens;
       
-      // Format the balance
       const formatted = formatUnits(currentBalanceBigInt, decimals);
       const number = parseFloat(formatted);
+      
+      // StreamingBalance calculation complete
       
       setCurrentBalance(
         number.toLocaleString(undefined, {
           maximumFractionDigits: decimalPlaces,
-          minimumFractionDigits: decimalPlaces, // Always show the same number of decimal places
+          minimumFractionDigits: decimalPlaces,
         })
       );
     };
 
-    // Update immediately
     updateBalance();
 
     // Set up interval for real-time updates (100ms = 0.1 seconds for smooth animation)
@@ -78,7 +70,6 @@ export function StreamingBalance({
   );
 }
 
-// Utility function to create streaming balance props from common Superfluid data
 export function createStreamingBalanceProps(
   totalAmountStreamed: string,
   totalAmountStreamedTimestamp: string,

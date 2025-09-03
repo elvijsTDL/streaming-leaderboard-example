@@ -33,14 +33,12 @@ export function StremeCard({ className = "" }: StremeCardProps) {
         if (data) {
           setStremeData(data);
           
-          // Fetch pool members if staking pool is available
           if (data.staking_pool) {
             setIsLoadingMembers(true);
             try {
               const members = await fetchTopPoolMembers(data.staking_pool, 10);
               if (!cancelled) {
                 setPoolMembers(members);
-                // Resolve profiles for pool members
                 const addresses = members.map(m => m.account);
                 const profiles = await resolveManyProfiles(addresses);
                 if (!cancelled) {
@@ -56,7 +54,6 @@ export function StremeCard({ className = "" }: StremeCardProps) {
             }
           }
 
-          // Fetch Uniswap pool data if pool address is available
           if (data.pool_address) {
             setIsLoadingUniswap(true);
             try {
@@ -103,7 +100,6 @@ export function StremeCard({ className = "" }: StremeCardProps) {
 
 
 
-  // If loading
   if (isLoading) {
     return (
       <div className={`theme-card-bg theme-border rounded-lg p-6 ${className}`} style={{borderWidth: '1px'}}>

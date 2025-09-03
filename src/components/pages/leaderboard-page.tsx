@@ -7,21 +7,9 @@ export function LeaderboardPage() {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
   const handleCopyAddress = async (addressToCopy: string) => {
-    try {
       await navigator.clipboard.writeText(addressToCopy);
       setCopiedAddress(addressToCopy);
       setTimeout(() => setCopiedAddress(null), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = addressToCopy;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopiedAddress(addressToCopy);
-      setTimeout(() => setCopiedAddress(null), 2000);
-    }
   };
 
   return (

@@ -14,11 +14,11 @@ import {
 interface UserChainStats {
   address: string;
   profile?: ResolvedProfile;
-  totalStreamedToken?: string; // formatted token amount
-  currentFlowPerDayToken?: string; // formatted token flow rate
-  flowRank?: number | null; // rank by current outflow rate
-  volumeRank?: number | null; // rank by total streamed
-  activeStreamSince?: number | null; // unix seconds
+  totalStreamedToken?: string; 
+  currentFlowPerDayToken?: string; 
+  flowRank?: number | null; 
+  volumeRank?: number | null;
+  activeStreamSince?: number | null;
 }
 
 export function useUserProfile() {

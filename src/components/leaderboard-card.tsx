@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
-import { TOKEN_ADDRESS, TOKEN_SYMBOL, fetchTopFlowRateLeaders, fetchTopVolumeLeadersWithStreaming, formatFlowRatePerDay, formatTokenAmount, type VolumeLeaderboardEntry } from "../lib/superfluid";
+import { TOKEN_ADDRESS, TOKEN_SYMBOL, formatFlowRatePerDay } from "../lib/superfluid";
+import { useTopFlowRateLeaders, useTopVolumeLeaders } from "../hooks/queries/use-leaderboard";
 import { resolveManyProfiles, type ResolvedProfile } from "../lib/whois";
 import { shortenAddress } from "../lib/utils";
 import { StreamingBalance } from "./streaming-balance";
@@ -21,75 +22,80 @@ export function LeaderboardCard({
 }: LeaderboardCardProps) {
   const [activeLeaderboardTab, setActiveLeaderboardTab] = useState<"flow" | "volume">("flow");
   const [page, setPage] = useState(0);
-  const [flowLeaders, setFlowLeaders] = useState<Array<{ address: string; perDay: string }>>([]);
-  const [volumeLeaders, setVolumeLeaders] = useState<Array<{ address: string; amount: string }>>([]);
-  const [volumeStreamingLeaders, setVolumeStreamingLeaders] = useState<VolumeLeaderboardEntry[]>([]);
-  const [isLoadingLeaders, setIsLoadingLeaders] = useState(false);
   const [profiles, setProfiles] = useState<Record<string, ResolvedProfile>>({});
-  const [hasNextFlow, setHasNextFlow] = useState(false);
-  const [hasNextVolume, setHasNextVolume] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    setIsLoadingLeaders(true);
-    Promise.all([
-      fetchTopFlowRateLeaders(TOKEN_ADDRESS, PAGE_SIZE + 1, page * PAGE_SIZE),
-      fetchTopVolumeLeadersWithStreaming(TOKEN_ADDRESS, PAGE_SIZE + 1, page * PAGE_SIZE),
-    ]).then(async ([flowRes, volumeStreamingRes]) => {
-      if (cancelled) return;
-      
-      const flowData = flowRes.slice(0, PAGE_SIZE);
-      const volumeStreamingData = volumeStreamingRes.slice(0, PAGE_SIZE);
-      
-            // Map the data to the expected format
-      const mappedFlowData = flowData.map((e) => ({ 
-        address: e.account, 
-        perDay: formatFlowRatePerDay(e.value) 
-      }));
-      const mappedVolumeData = volumeStreamingData.map((e) => ({
-        address: e.account,
-        amount: formatTokenAmount(e.totalAmountStreamedUntilUpdatedAt)
-      }));
+  // Use the new query hooks
+  const { data: flowRawData, isLoading: isLoadingFlowLeaders } = useTopFlowRateLeaders(
+    TOKEN_ADDRESS, 
+    PAGE_SIZE + 1, 
+    page * PAGE_SIZE
+  );
+  
+  const { data: volumeRawData, isLoading: isLoadingVolumeLeaders } = useTopVolumeLeaders(
+    TOKEN_ADDRESS,
+    PAGE_SIZE + 1,
+    page * PAGE_SIZE
+  );
 
-      setFlowLeaders(mappedFlowData);
-      setVolumeLeaders(mappedVolumeData);
-      setVolumeStreamingLeaders(volumeStreamingData);
-      setHasNextFlow(flowRes.length > PAGE_SIZE);
-      setHasNextVolume(volumeStreamingRes.length > PAGE_SIZE);
+  // Process the raw data from hooks
+  const processedData = useMemo(() => {
+    if (!flowRawData || !volumeRawData) return null;
 
-      // Get unique addresses from both lists
-      const allAddresses = [...new Set([
-        ...mappedFlowData.map(entry => entry.address.toLowerCase()),
-        ...mappedVolumeData.map(entry => entry.address.toLowerCase())
-      ])];
-
-      if (allAddresses.length > 0) {
-        try {
-          const resolvedProfiles = await resolveManyProfiles(allAddresses);
-          if (!cancelled) {
-            setProfiles(resolvedProfiles);
-          }
-        } catch (error) {
-          console.error("Error resolving profiles:", error);
-        }
-      }
-      
-      setIsLoadingLeaders(false);
-    }).catch(() => {
-      if (!cancelled) {
-        setIsLoadingLeaders(false);
-      }
-    });
+    const flowData = flowRawData.slice(0, PAGE_SIZE);
+    const volumeData = volumeRawData.slice(0, PAGE_SIZE);
     
+    // Map the data to the expected format
+    const mappedFlowData = flowData.map((e) => ({ 
+      address: e.account, 
+      perDay: formatFlowRatePerDay(e.value) 
+    }));
+    const mappedVolumeData = volumeData.map((e) => ({
+      address: e.account,
+      amount: "0" // Will be calculated by StreamingBalance component
+    }));
+
+    return {
+      flowLeaders: mappedFlowData,
+      volumeLeaders: mappedVolumeData,
+      volumeStreamingLeaders: volumeData,
+      hasNextFlow: flowRawData.length > PAGE_SIZE,
+      hasNextVolume: volumeRawData.length > PAGE_SIZE,
+    };
+  }, [flowRawData, volumeRawData]);
+
+  // Resolve profiles when we have new addresses
+  useEffect(() => {
+    if (!processedData) return;
+
+    const allAddresses = [...new Set([
+      ...processedData.flowLeaders.map(entry => entry.address.toLowerCase()),
+      ...processedData.volumeLeaders.map(entry => entry.address.toLowerCase())
+    ])];
+
+    if (allAddresses.length === 0) return;
+
+    let cancelled = false;
+    resolveManyProfiles(allAddresses)
+      .then(resolvedProfiles => {
+        if (!cancelled) {
+          setProfiles(resolvedProfiles);
+        }
+      })
+      .catch(() => {
+        // ignore profile resolution errors
+      });
+
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [processedData]);
 
   const displayEntries = useMemo(() => {
+    if (!processedData) return [];
+    
     const rankOffset = page * PAGE_SIZE;
     if (activeLeaderboardTab === "flow") {
-      return flowLeaders.map((entry, idx) => ({
+      return processedData.flowLeaders.map((entry, idx) => ({
         rank: rankOffset + idx + 1,
         address: entry.address,
         value: `${entry.perDay} ${TOKEN_SYMBOL}`,
@@ -97,17 +103,20 @@ export function LeaderboardCard({
         streamingData: null,
       }));
     }
-    return volumeLeaders.map((entry, idx) => {
-      const streamingEntry = volumeStreamingLeaders[idx];
+    return processedData.volumeLeaders.map((entry, idx) => {
+      const streamingEntry = processedData.volumeStreamingLeaders[idx];
+      
+      // Volume leaderboard with streaming animation
+      
       return {
         rank: rankOffset + idx + 1,
         address: entry.address,
-        value: `${entry.amount} ${TOKEN_SYMBOL}`,
+        value: `${entry.amount} ${TOKEN_SYMBOL}`, // This now includes real-time streaming calculations!
         isYou: address && entry.address.toLowerCase() === address.toLowerCase(),
         streamingData: streamingEntry,
       };
     });
-  }, [activeLeaderboardTab, flowLeaders, volumeLeaders, volumeStreamingLeaders, address, page]);
+  }, [processedData, activeLeaderboardTab, page, address]);
 
   return (
     <div className={`theme-card-bg theme-border rounded-lg p-6 ${className}`} style={{borderWidth: '1px'}}>
@@ -133,7 +142,7 @@ export function LeaderboardCard({
         </div>
       </div>
 
-      {isLoadingLeaders ? (
+      {(isLoadingFlowLeaders || isLoadingVolumeLeaders) ? (
         <div className="theme-text-muted text-center py-8">Loading leaderboard…</div>
       ) : displayEntries.length > 0 ? (
         <div className="space-y-3">
@@ -169,8 +178,9 @@ export function LeaderboardCard({
                       initialBalance={entry.streamingData.totalAmountStreamedUntilUpdatedAt}
                       initialTimestamp={entry.streamingData.updatedAtTimestamp}
                       flowRatePerSecond={entry.streamingData.totalOutflowRate}
+                      decimals={18}
                       symbol={TOKEN_SYMBOL}
-                      decimalPlaces={2}
+                      decimalPlaces={3}
                     />
                   ) : (
                     entry.value
@@ -194,9 +204,9 @@ export function LeaderboardCard({
             <div className="text-xs theme-text-secondary">Page {page + 1}</div>
             <button
               type="button"
-              disabled={activeLeaderboardTab === "flow" ? !hasNextFlow : !hasNextVolume}
+              disabled={activeLeaderboardTab === "flow" ? !processedData?.hasNextFlow : !processedData?.hasNextVolume}
               onClick={() => setPage((p) => p + 1)}
-              className={`px-3 py-1 rounded border ${(activeLeaderboardTab === "flow" ? !hasNextFlow : !hasNextVolume) ? "theme-border theme-text-muted" : "theme-border theme-text-primary hover:theme-button hover:text-black"}`}
+              className={`px-3 py-1 rounded border ${(activeLeaderboardTab === "flow" ? !processedData?.hasNextFlow : !processedData?.hasNextVolume) ? "theme-border theme-text-muted" : "theme-border theme-text-primary hover:theme-button hover:text-black"}`}
               style={{borderWidth: '1px'}}
             >
               Next

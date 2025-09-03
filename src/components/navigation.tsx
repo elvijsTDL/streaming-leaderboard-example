@@ -1,6 +1,6 @@
 import { TOKEN_SYMBOL } from "../lib/superfluid";
 
-export type PageType = 'stats' | 'leaderboard' | 'streams' | 'events' | 'trading';
+export type PageType = 'stats' | 'leaderboard' | 'streams' | 'events' | 'trading' | 'yoink';
 
 interface NavigationProps {
   currentPage: PageType;
@@ -14,12 +14,12 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
     { id: 'streams' as const, label: 'Streams' },
     { id: 'events' as const, label: 'Events' },
     { id: 'trading' as const, label: 'Trading' },
+    { id: 'yoink' as const, label: 'Yoink' },
   ];
 
   return (
     <header className="theme-card-bg theme-border rounded-xl p-6 mb-8 backdrop-blur-sm" style={{borderWidth: '1px'}}>
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        {/* Logo/Title Section */}
         <div className="flex flex-col items-center lg:items-start">
           <div className="text-2xl lg:text-3xl font-black theme-text-primary tracking-tight">
             The ${TOKEN_SYMBOL} Token Matrix
@@ -29,7 +29,6 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
           <div className="w-16 h-1 theme-button rounded-full mt-2"></div>
         </div>
         
-        {/* Navigation Buttons */}
         <nav className="flex flex-wrap justify-center lg:justify-end gap-2">
           {pages.map((page) => (
             <button

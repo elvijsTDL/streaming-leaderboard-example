@@ -4,8 +4,8 @@ export const SUPERFLUID_SUBGRAPH_BASE =
   "https://subgraph-endpoints.superfluid.dev/base-mainnet/protocol-v1";
 
 // Token configuration from environment variables
-export const TOKEN_ADDRESS = (import.meta.env.VITE_TOKEN_ADDRESS as string) ?? "0x1c4f69f14cf754333c302246d25a48a13224118a";
-export const TOKEN_SYMBOL = (import.meta.env.VITE_TOKEN_SYMBOL as string) ?? "BUTTHOLE";
+export const TOKEN_ADDRESS = (import.meta.env.VITE_TOKEN_ADDRESS as string) ?? "0x3B3Cd21242BA44e9865B066e5EF5d1cC1030CC58";
+export const TOKEN_SYMBOL = (import.meta.env.VITE_TOKEN_SYMBOL as string) ?? "STREME";
 
 // Social links configuration from environment variables
 export const SOCIAL_LINKS = {

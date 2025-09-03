@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { FarcasterProvider } from "../hooks/use-farcaster";
-import { WalletProvider } from "../hooks/use-wallet";
 
 import { Navigation, type PageType } from "./navigation";
 import { DashboardPage } from "./pages/dashboard-page";
@@ -10,6 +9,7 @@ import { LeaderboardPage } from "./pages/leaderboard-page";
 import { StreamsPage } from "./pages/streams-page";
 import { EventsPage } from "./pages/events-page";
 import { AnalyticsPage } from "./pages/analytics-page";
+import { YoinkPage } from "./pages/yoink-page";
 
 function MainView() {
   const [currentPage, setCurrentPage] = useState<PageType>('stats');
@@ -28,6 +28,8 @@ function MainView() {
         return <EventsPage />;
       case 'trading':
         return <AnalyticsPage />;
+      case 'yoink':
+        return <YoinkPage />;
       default:
         return <DashboardPage />;
     }
@@ -49,9 +51,7 @@ function MainView() {
 export default function MainApp() {
   return (
     <FarcasterProvider>
-      <WalletProvider>
-        <MainView />
-      </WalletProvider>
+      <MainView />
     </FarcasterProvider>
   );
 }

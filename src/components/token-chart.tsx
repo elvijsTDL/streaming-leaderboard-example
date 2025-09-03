@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TOKEN_ADDRESS, TOKEN_SYMBOL, SOCIAL_LINKS } from "../lib/superfluid";
-import { useWallet } from "../hooks/use-wallet";
+import { useAccount } from "wagmi";
 import { Button } from "./ui/button";
 
 interface TokenStats {
@@ -23,7 +23,7 @@ export function TokenChart({ className = "" }: TokenChartProps) {
   const [chartUrl, setChartUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { isConnected, connectWallet } = useWallet();
+  const { isConnected } = useAccount();
   const [showCopiedTooltip, setShowCopiedTooltip] = useState(false);
   const [tokenStats, setTokenStats] = useState<TokenStats>({
     price: "$0.00",
@@ -101,7 +101,7 @@ export function TokenChart({ className = "" }: TokenChartProps) {
   // Trading functions
   const handleBuyToken = () => {
     if (!isConnected) {
-      connectWallet();
+      alert("Please connect your wallet first using the connect button in the user profile section.");
       return;
     }
     
@@ -112,7 +112,7 @@ export function TokenChart({ className = "" }: TokenChartProps) {
 
   const handleSellToken = () => {
     if (!isConnected) {
-      connectWallet();
+      alert("Please connect your wallet first using the connect button in the user profile section.");
       return;
     }
     

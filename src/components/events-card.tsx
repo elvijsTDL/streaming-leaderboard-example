@@ -89,11 +89,10 @@ export function EventsCard({ className }: EventsCardProps) {
     return '';
   };
 
+  // TODO: Use CMS tokenlist to check if an address is Streme-related
   // Function to check if an address might be Streme-related (basic heuristic)
   const isStremeRelated = (_address: string) => {
-    // This is a simple check - in a real app you'd want to maintain a list of known Streme addresses
-    // For now, we'll check if it matches common patterns or known addresses
-    return false; // We'll enhance this when we have specific Streme addresses
+    return false;
   };
 
   const getEventDescription = (event: TokenEvent) => {
