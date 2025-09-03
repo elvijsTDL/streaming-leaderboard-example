@@ -21,6 +21,9 @@
           "leaderboard",
           "superfluid"
         ],
+        "ogTitle": "Streaming Leaderboard Miniapp Example",
+        "ogImageUrl": "https://streaming-leaderboard-example.vercel.app/og-image.png",
+        "ogDescription": "Most go with the flow, but can you get to the top ?",
         "buttonTitle": "Go with the flow",
         "tagline": "Every second counts, jump in!",
         "webhookUrl": "https://streaming-leaderboard-example.vercel.app/webhookToBeUpdated"
