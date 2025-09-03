@@ -4,7 +4,7 @@ import ReactDOM from "react-dom/client";
 import { WagmiProvider } from "wagmi";
 import { createAppKit } from "@reown/appkit/react";
 import { base } from "@reown/appkit/networks";
-import { wagmiAdapter, projectId } from "./wagmi";
+import { wagmiAdapter, projectId, config } from "./wagmi";
 
 import App from "./App.tsx";
 import { generateThemeCSS } from "./lib/theme";
@@ -44,7 +44,7 @@ const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <App />
       </QueryClientProvider>

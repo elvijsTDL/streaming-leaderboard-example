@@ -19,6 +19,12 @@ interface UserProfileCardProps {
   address: string | null;
   totalVolumeStreamed: string;
   TOKEN_SYMBOL: string;
+  // Frame-specific props
+  frameWalletAddress?: string | null;
+  frameWalletConnected?: boolean;
+  frameWalletConnecting?: boolean;
+  frameConnectWallet?: () => Promise<void>;
+  frameDisconnectWallet?: () => void;
 }
 
 export function UserProfileCard({
@@ -32,6 +38,11 @@ export function UserProfileCard({
   isWalletConnected,
   address,
   TOKEN_SYMBOL,
+  frameWalletAddress,
+  frameWalletConnected,
+  frameWalletConnecting,
+  frameConnectWallet,
+  frameDisconnectWallet,
 }: UserProfileCardProps) {
   // Internal state for copy functionality
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
@@ -40,21 +51,25 @@ export function UserProfileCard({
   // Use the user profile hook for WHOIS data
   const { profile: whoisProfile, chainStats, loading: userStatsLoading } = useUserProfile();
 
+  // Determine which wallet address and connection status to use
+  const effectiveAddress = isInMiniApp ? (frameWalletAddress || address) : address;
+  const effectiveIsConnected = isInMiniApp ? (frameWalletConnected || isWalletConnected) : isWalletConnected;
+
   // Fetch streaming data for real-time updates
   useEffect(() => {
-    if (address && isWalletConnected) {
-      fetchAccountStreamingData(TOKEN_ADDRESS, address).then(setStreamingData);
+    if (effectiveAddress && effectiveIsConnected) {
+      fetchAccountStreamingData(TOKEN_ADDRESS, effectiveAddress).then(setStreamingData);
     } else {
       setStreamingData(null);
     }
-  }, [address, isWalletConnected]);
+  }, [effectiveAddress, effectiveIsConnected]);
 
   // Fetch token balance using wagmi
   const { data: tokenBalance, isLoading: isBalanceLoading } = useBalance({
-    address: address as `0x${string}`,
+    address: effectiveAddress as `0x${string}`,
     token: TOKEN_ADDRESS as `0x${string}`,
     query: {
-      enabled: !!address && isWalletConnected,
+      enabled: !!effectiveAddress && effectiveIsConnected,
     },
   });
 
@@ -103,20 +118,33 @@ export function UserProfileCard({
             )}
             
             {/* Show wallet address if connected */}
-            {isWalletConnected && address && (
+            {effectiveIsConnected && effectiveAddress && (
               <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-                <div className="theme-text-secondary text-sm mb-1">Connected Wallet</div>
+                <div className="theme-text-secondary text-sm mb-1">
+                  {isInMiniApp && frameWalletConnected ? "Frame Wallet" : "Connected Wallet"}
+                </div>
                 <button
                   type="button"
-                  onClick={() => handleCopyAddress(address)}
+                  onClick={() => handleCopyAddress(effectiveAddress)}
                   className="flex items-center gap-2 theme-text-primary hover:theme-text-secondary transition-colors cursor-pointer group font-mono text-sm"
                   title="Click to copy address"
                 >
-                  <span>{address.slice(0, 6)}...{address.slice(-4)}</span>
+                  <span>{effectiveAddress.slice(0, 6)}...{effectiveAddress.slice(-4)}</span>
                   <span className="text-xs opacity-60 group-hover:opacity-100">
-                    {copiedAddress === address ? '✓' : '📋'}
+                    {copiedAddress === effectiveAddress ? '✓' : '📋'}
                   </span>
                 </button>
+                {isInMiniApp && frameWalletConnected && frameDisconnectWallet && (
+                  <Button
+                    onClick={frameDisconnectWallet}
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full theme-border theme-text-primary hover:theme-button hover:text-black bg-transparent text-xs"
+                    style={{borderWidth: '1px'}}
+                  >
+                    DISCONNECT WALLET
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -232,9 +260,21 @@ export function UserProfileCard({
               
               {/* Show Farcaster button only in MiniApp, AppKit button otherwise */}
               {isInMiniApp ? (
-                <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full theme-button text-black font-bold">
-                  {isFarcasterConnecting ? "CONNECTING..." : "CONNECT FARCASTER"}
-                </Button>
+                <div className="space-y-3">
+                  <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full theme-button text-black font-bold">
+                    {isFarcasterConnecting ? "CONNECTING..." : "CONNECT FARCASTER"}
+                  </Button>
+                  {/* Frame wallet connection */}
+                  {!frameWalletConnected && frameConnectWallet && (
+                    <Button 
+                      onClick={frameConnectWallet} 
+                      disabled={frameWalletConnecting} 
+                      className="w-full theme-button text-black font-bold"
+                    >
+                      {frameWalletConnecting ? "CONNECTING WALLET..." : "CONNECT WALLET"}
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <div className="w-full">
                   <appkit-button />

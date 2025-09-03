@@ -14,6 +14,12 @@ interface DashboardPageProps {
   address: string | null;
   totalVolumeStreamed: string;
   TOKEN_SYMBOL: string;
+  // Frame wallet props
+  frameWalletAddress?: string | null;
+  frameWalletConnected?: boolean;
+  frameWalletConnecting?: boolean;
+  frameConnectWallet?: () => Promise<void>;
+  frameDisconnectWallet?: () => void;
   // Token stats props
   tokenStats: any;
   fullTokenStats?: TokenStatistics | null;
@@ -30,6 +36,11 @@ export function DashboardPage({
   address,
   totalVolumeStreamed,
   TOKEN_SYMBOL,
+  frameWalletAddress,
+  frameWalletConnected,
+  frameWalletConnecting,
+  frameConnectWallet,
+  frameDisconnectWallet,
   tokenStats,
   fullTokenStats,
 }: DashboardPageProps) {
@@ -46,6 +57,11 @@ export function DashboardPage({
         address={address}
         totalVolumeStreamed={totalVolumeStreamed}
         TOKEN_SYMBOL={TOKEN_SYMBOL}
+        frameWalletAddress={frameWalletAddress}
+        frameWalletConnected={frameWalletConnected}
+        frameWalletConnecting={frameWalletConnecting}
+        frameConnectWallet={frameConnectWallet}
+        frameDisconnectWallet={frameDisconnectWallet}
       />
 
       <TokenStatsCard

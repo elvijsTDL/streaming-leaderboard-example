@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { useConnect, useAccount, useDisconnect } from "wagmi";
 import sdk from "@farcaster/frame-sdk";
 
 interface FarcasterUser {
@@ -18,8 +19,13 @@ interface FarcasterContextType {
   isConnecting: boolean;
   isConnected: boolean;
   isInMiniApp: boolean;
+  walletAddress: string | null;
+  isWalletConnected: boolean;
+  isWalletConnecting: boolean;
   signIn: () => Promise<void>;
   signOut: () => void;
+  connectWallet: () => Promise<void>;
+  disconnectWallet: () => void;
   error: string | null;
   frameContext: any;
 }
@@ -32,6 +38,11 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [frameContext, setFrameContext] = useState<any>(null);
   const [isInMiniApp, setIsInMiniApp] = useState(false);
+
+  // Wagmi hooks for wallet connection
+  const { connect, connectors, isPending: isWalletConnecting } = useConnect();
+  const { address: walletAddress, isConnected: isWalletConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   const isConnected = !!user;
 
@@ -103,14 +114,53 @@ export function FarcasterProvider({ children }: { children: ReactNode }) {
     console.log("🚪 User signed out");
   };
 
+  const connectWallet = async () => {
+    if (!isInMiniApp) {
+      setError("Wallet connection through frame is only available in MiniApp environment");
+      return;
+    }
+
+    try {
+      // Find the Farcaster frame connector
+      const farcasterConnector = connectors.find(
+        (connector) => connector.id === "farcasterFrame"
+      );
+
+      if (farcasterConnector) {
+        console.log("🔗 Connecting wallet via Farcaster frame connector");
+        await connect({ connector: farcasterConnector });
+      } else {
+        setError("Farcaster frame connector not available");
+        console.error("❌ Farcaster frame connector not found");
+      }
+    } catch (err) {
+      setError("Failed to connect wallet through frame");
+      console.error("Wallet connection error:", err);
+    }
+  };
+
+  const disconnectWallet = () => {
+    try {
+      disconnect();
+      console.log("🔌 Wallet disconnected");
+    } catch (err) {
+      console.error("Error disconnecting wallet:", err);
+    }
+  };
+
   return (
     <FarcasterContext.Provider value={{ 
       user, 
       isConnecting, 
       isConnected, 
       isInMiniApp, 
+      walletAddress: walletAddress ?? null,
+      isWalletConnected,
+      isWalletConnecting,
       signIn, 
       signOut, 
+      connectWallet,
+      disconnectWallet,
       error, 
       frameContext 
     }}>

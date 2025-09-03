@@ -13,7 +13,19 @@ import { EventsPage } from "./pages/events-page";
 import { AnalyticsPage } from "./pages/analytics-page";
 
 function MainView() {
-  const { user: farcasterUser, isConnected: isFarcasterConnected, signIn: farcasterSignIn, signOut: farcasterSignOut, isConnecting: isFarcasterConnecting, isInMiniApp } = useFarcaster();
+  const { 
+    user: farcasterUser, 
+    isConnected: isFarcasterConnected, 
+    signIn: farcasterSignIn, 
+    signOut: farcasterSignOut, 
+    isConnecting: isFarcasterConnecting, 
+    isInMiniApp,
+    walletAddress: frameWalletAddress,
+    isWalletConnected: frameWalletConnected,
+    isWalletConnecting: frameWalletConnecting,
+    connectWallet: frameConnectWallet,
+    disconnectWallet: frameDisconnectWallet
+  } = useFarcaster();
   const { address, isConnected: isWalletConnected, totalVolumeStreamed } = useWallet();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<PageType>('stats');
