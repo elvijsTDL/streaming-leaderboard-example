@@ -13,7 +13,7 @@ import { EventsPage } from "./pages/events-page";
 import { AnalyticsPage } from "./pages/analytics-page";
 
 function MainView() {
-  const { user: farcasterUser, isConnected: isFarcasterConnected, signIn: farcasterSignIn, signOut: farcasterSignOut, isConnecting: isFarcasterConnecting } = useFarcaster();
+  const { user: farcasterUser, isConnected: isFarcasterConnected, signIn: farcasterSignIn, signOut: farcasterSignOut, isConnecting: isFarcasterConnecting, isInMiniApp } = useFarcaster();
   const { address, isConnected: isWalletConnected, totalVolumeStreamed } = useWallet();
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<PageType>('stats');
@@ -106,6 +106,7 @@ function MainView() {
             farcasterSignOut={farcasterSignOut}
             farcasterSignIn={farcasterSignIn}
             isFarcasterConnecting={isFarcasterConnecting}
+            isInMiniApp={isInMiniApp}
             isWalletConnected={isWalletConnected}
             address={address}
             totalVolumeStreamed={totalVolumeStreamed}
@@ -135,6 +136,7 @@ function MainView() {
           farcasterSignOut={farcasterSignOut}
           farcasterSignIn={farcasterSignIn}
           isFarcasterConnecting={isFarcasterConnecting}
+          isInMiniApp={isInMiniApp}
           isWalletConnected={isWalletConnected}
           address={address}
           totalVolumeStreamed={totalVolumeStreamed}

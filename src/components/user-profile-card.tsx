@@ -14,6 +14,7 @@ interface UserProfileCardProps {
   farcasterSignOut: () => void;
   farcasterSignIn: () => void;
   isFarcasterConnecting: boolean;
+  isInMiniApp: boolean;
   isWalletConnected: boolean;
   address: string | null;
   totalVolumeStreamed: string;
@@ -27,6 +28,7 @@ export function UserProfileCard({
   farcasterSignOut,
   farcasterSignIn,
   isFarcasterConnecting,
+  isInMiniApp,
   isWalletConnected,
   address,
   TOKEN_SYMBOL,
@@ -80,23 +82,25 @@ export function UserProfileCard({
             <div className="flex items-center space-x-3">
               <img src={farcasterUser.pfpUrl || "/placeholder.svg"} alt="Profile" className="w-12 h-12 rounded-full border-2 theme-border" />
               <div className="flex-1">
-                <div className="theme-text-primary font-bold text-lg">{farcasterUser.displayName}</div>
-                <div className="theme-text-secondary text-sm">@{farcasterUser.username}</div>
+                <div className="theme-text-primary font-bold text-lg">{farcasterUser.displayName || "Farcaster User"}</div>
+                <div className="theme-text-secondary text-sm">@{farcasterUser.username || "user"}</div>
                 <div className="theme-text-muted text-xs">FID: {farcasterUser.fid}</div>
               </div>
             </div>
             
             {/* Farcaster Social Stats */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-                <div className="theme-text-secondary">Followers</div>
-                <div className="theme-text-primary font-bold">{farcasterUser.followerCount?.toLocaleString() || "0"}</div>
+            {(farcasterUser.followerCount !== undefined || farcasterUser.followingCount !== undefined) && (
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Followers</div>
+                  <div className="theme-text-primary font-bold">{farcasterUser.followerCount?.toLocaleString() || "—"}</div>
+                </div>
+                <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
+                  <div className="theme-text-secondary">Following</div>
+                  <div className="theme-text-primary font-bold">{farcasterUser.followingCount?.toLocaleString() || "—"}</div>
+                </div>
               </div>
-              <div className="theme-card-bg rounded p-3 border theme-border" style={{borderWidth: '1px'}}>
-                <div className="theme-text-secondary">Following</div>
-                <div className="theme-text-primary font-bold">{farcasterUser.followingCount?.toLocaleString() || "0"}</div>
-              </div>
-            </div>
+            )}
             
             {/* Show wallet address if connected */}
             {isWalletConnected && address && (
@@ -225,12 +229,17 @@ export function UserProfileCard({
                 <span>Connection:</span>
                 <span className="text-red-400">DISCONNECTED</span>
               </div>
-              <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full theme-button text-black font-bold">
-                {isFarcasterConnecting ? "CONNECTING..." : "CONNECT FARCASTER"}
-              </Button>
-              <div className="w-full">
-                <appkit-button />
-              </div>
+              
+              {/* Show Farcaster button only in MiniApp, AppKit button otherwise */}
+              {isInMiniApp ? (
+                <Button onClick={farcasterSignIn} disabled={isFarcasterConnecting} className="w-full theme-button text-black font-bold">
+                  {isFarcasterConnecting ? "CONNECTING..." : "CONNECT FARCASTER"}
+                </Button>
+              ) : (
+                <div className="w-full">
+                  <appkit-button />
+                </div>
+              )}
             </div>
           )}
         </div>

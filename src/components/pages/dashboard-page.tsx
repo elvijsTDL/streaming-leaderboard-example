@@ -9,6 +9,7 @@ interface DashboardPageProps {
   farcasterSignOut: () => void;
   farcasterSignIn: () => void;
   isFarcasterConnecting: boolean;
+  isInMiniApp: boolean;
   isWalletConnected: boolean;
   address: string | null;
   totalVolumeStreamed: string;
@@ -24,6 +25,7 @@ export function DashboardPage({
   farcasterSignOut,
   farcasterSignIn,
   isFarcasterConnecting,
+  isInMiniApp,
   isWalletConnected,
   address,
   totalVolumeStreamed,
@@ -39,6 +41,7 @@ export function DashboardPage({
         farcasterSignOut={farcasterSignOut}
         farcasterSignIn={farcasterSignIn}
         isFarcasterConnecting={isFarcasterConnecting}
+        isInMiniApp={isInMiniApp}
         isWalletConnected={isWalletConnected}
         address={address}
         totalVolumeStreamed={totalVolumeStreamed}
