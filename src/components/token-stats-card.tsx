@@ -18,7 +18,6 @@ interface TokenStatsCardProps {
   className?: string;
   tokenStats: TokenStats | null;
   TOKEN_SYMBOL: string;
-  // Add full statistics for streaming balance
   fullTokenStats?: TokenStatistics | null;
 }
 

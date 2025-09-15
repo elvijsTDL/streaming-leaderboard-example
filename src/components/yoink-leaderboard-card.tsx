@@ -36,7 +36,7 @@ export function YoinkLeaderboardCard({
         {leaderboard.map((entry) => (
           <div key={entry.address} className="flex items-center justify-between p-3 rounded theme-card-bg border theme-border" style={{borderWidth: '1px'}}>
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded theme-button flex items-center justify-center theme-text-primary font-bold text-sm">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded theme-button flex items-center justify-center theme-text-primary font-bold text-xs sm:text-sm">
                 #{entry.rank}
               </div>
               <img 

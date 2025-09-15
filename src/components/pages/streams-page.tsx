@@ -3,6 +3,7 @@ import { fetchCFAStreams, type CFAStream, formatFlowRatePerDay, TOKEN_ADDRESS, T
 import { resolveManyProfiles, type ResolvedProfile } from "../../lib/whois";
 import { shortenAddress } from "../../lib/utils";
 import { StreamingBalance } from "../streaming-balance";
+import { StreamCreateCard } from "../stream-create-card";
 
 const PAGE_SIZE = 20;
 
@@ -70,6 +71,7 @@ export function StreamsPage() {
 
   return (
     <div className="space-y-6">
+      <StreamCreateCard />
       <div className="theme-card-bg theme-border rounded-lg p-6" style={{borderWidth: '1px'}}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold theme-text-primary">Latest CFA Streams</h2>
