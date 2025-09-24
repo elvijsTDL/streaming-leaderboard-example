@@ -1,6 +1,6 @@
 import { TOKEN_SYMBOL } from "../lib/superfluid";
 
-export type PageType = 'stats' | 'leaderboard' | 'streams' | 'events' | 'trading' | 'yoink' | 'wrap';
+export type PageType = 'stats' | 'leaderboard' | 'streams' | 'events' | 'trading' | 'yoink' | 'wrap' | 'gda-pools';
 
 interface NavigationProps {
   currentPage: PageType;
@@ -16,6 +16,7 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
     { id: 'trading' as const, label: 'Streme' },
     { id: 'yoink' as const, label: 'Yoink - WIP' },
     { id: 'wrap' as const, label: 'Wrap' },
+    { id: 'gda-pools' as const, label: 'GDA Pools' },
   ];
 
   return (

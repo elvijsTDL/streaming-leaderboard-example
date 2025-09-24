@@ -11,6 +11,7 @@ import { EventsPage } from "./pages/events-page";
 import { AnalyticsPage } from "./pages/analytics-page";
 import { YoinkPage } from "./pages/yoink-page";
 import { WrapPage } from "./pages/wrap-page";
+import { GDAPoolsPage } from "./pages/gda-pools-page";
 
 function MainView() {
   const [currentPage, setCurrentPage] = useState<PageType>('stats');
@@ -33,6 +34,8 @@ function MainView() {
         return <YoinkPage />;
       case 'wrap':
         return <WrapPage />;
+      case 'gda-pools':
+        return <GDAPoolsPage />;
       default:
         return <DashboardPage />;
     }
