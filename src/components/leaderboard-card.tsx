@@ -129,7 +129,7 @@ export function LeaderboardCard({
             style={{borderWidth: '1px'}}
             onClick={() => setActiveLeaderboardTab("flow")}
           >
-            Flow Rate
+            Flow Rate (CFA)
           </button>
           <button
             type="button"
@@ -153,7 +153,7 @@ export function LeaderboardCard({
             return (
             <div key={`${activeLeaderboardTab}-${entry.rank}-${entry.address}`} className={`flex items-center justify-between p-3 rounded ${entry.isYou ? "theme-button border theme-border" : "theme-card-bg"}`} style={entry.isYou ? {borderWidth: '1px'} : {}}>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded theme-button flex items-center justify-center theme-text-primary font-bold text-sm">#{entry.rank}</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded theme-button flex items-center justify-center theme-text-primary font-bold text-xs sm:text-sm">#{entry.rank}</div>
                 <img src={avatar} alt="avatar" className="w-6 h-6 rounded-full border theme-border" />
                 <div className="flex-1 min-w-0">
                   <div className="theme-text-primary font-medium">{name}</div>
