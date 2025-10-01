@@ -1,4 +1,4 @@
-import { TOKEN_SYMBOL } from "../lib/superfluid";
+import { TOKEN_SYMBOL, CHAIN_ID } from "../lib/superfluid";
 
 export type PageType = 'stats' | 'leaderboard' | 'streams' | 'events' | 'trading' | 'yoink' | 'wrap' | 'gda-pools';
 
@@ -8,13 +8,15 @@ interface NavigationProps {
 }
 
 export function Navigation({ currentPage, onPageChange }: NavigationProps) {
+  const isBaseNetwork = CHAIN_ID === 8453;
+  
   const pages = [
     { id: 'stats' as const, label: 'Stats' },
     { id: 'leaderboard' as const, label: 'Leaderboard' },
     { id: 'streams' as const, label: 'Streams' },
     { id: 'events' as const, label: 'Events' },
-    { id: 'trading' as const, label: 'Streme' },
-    { id: 'yoink' as const, label: 'Yoink - WIP' },
+    ...(isBaseNetwork ? [{ id: 'trading' as const, label: 'Streme' }] : []),
+    { id: 'yoink' as const, label: 'Yoink' },
     { id: 'wrap' as const, label: 'Wrap' },
     { id: 'gda-pools' as const, label: 'GDA Pools' },
   ];
@@ -27,7 +29,8 @@ export function Navigation({ currentPage, onPageChange }: NavigationProps) {
             The ${TOKEN_SYMBOL} Token Matrix
           </div>
           <div className="text-sm theme-text-secondary mt-1 font-medium">
-          Your one stop shop for all $STREME things          </div>
+            {isBaseNetwork ? 'Your one stop shop for all $STREME things' : `Your dashboard for ${TOKEN_SYMBOL} streaming`}
+          </div>
           <div className="w-16 h-1 theme-button rounded-full mt-2"></div>
         </div>
         

@@ -1,7 +1,25 @@
 import { formatUnits } from "viem";
 
-export const SUPERFLUID_SUBGRAPH_BASE =
-  "https://subgraph-endpoints.superfluid.dev/base-mainnet/protocol-v1";
+// Network configuration
+export const CHAIN_ID = parseInt((import.meta.env.VITE_CHAIN_ID as string) ?? "8453", 10);
+
+// Network-specific subgraph endpoints
+const SUPERFLUID_SUBGRAPH_ENDPOINTS: Record<number, string> = {
+  // Mainnet networks
+  8453: "https://subgraph-endpoints.superfluid.dev/base-mainnet/protocol-v1",
+  137: "https://subgraph-endpoints.superfluid.dev/polygon-mainnet/protocol-v1",
+  10: "https://subgraph-endpoints.superfluid.dev/optimism-mainnet/protocol-v1",
+  42161: "https://subgraph-endpoints.superfluid.dev/arbitrum-one/protocol-v1",
+  1: "https://subgraph-endpoints.superfluid.dev/eth-mainnet/protocol-v1",
+  100: "https://subgraph-endpoints.superfluid.dev/xdai-mainnet/protocol-v1",
+  // Testnet networks
+  11155420: "https://subgraph-endpoints.superfluid.dev/optimism-sepolia/protocol-v1",
+  11155111: "https://subgraph-endpoints.superfluid.dev/eth-sepolia/protocol-v1",
+  43113: "https://subgraph-endpoints.superfluid.dev/avalanche-fuji/protocol-v1",
+  534351: "https://subgraph-endpoints.superfluid.dev/scroll-sepolia/protocol-v1",
+};
+
+export const SUPERFLUID_SUBGRAPH_BASE = SUPERFLUID_SUBGRAPH_ENDPOINTS[CHAIN_ID] ?? SUPERFLUID_SUBGRAPH_ENDPOINTS[8453];
 
 // Token configuration from environment variables
 export const TOKEN_ADDRESS = (import.meta.env.VITE_TOKEN_ADDRESS as string) ?? "0x3B3Cd21242BA44e9865B066e5EF5d1cC1030CC58";

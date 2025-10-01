@@ -1,7 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
-
-export const SUPERFLUID_SUBGRAPH_BASE =
-  "https://subgraph-endpoints.superfluid.dev/base-mainnet/protocol-v1";
+import { SUPERFLUID_SUBGRAPH_BASE } from './superfluid';
 
 // Create a GraphQL client instance
 export const graphqlClient = new GraphQLClient(SUPERFLUID_SUBGRAPH_BASE, {

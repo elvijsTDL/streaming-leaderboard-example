@@ -3,8 +3,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { WagmiProvider } from "wagmi";
 import { createAppKit } from "@reown/appkit/react";
+import { wagmiAdapter, projectId, config, currentAppKitNetwork } from "./wagmi";
 import { base } from "@reown/appkit/networks";
-import { wagmiAdapter, projectId, config } from "./wagmi";
 
 import App from "./App.tsx";
 import { generateThemeCSS } from "./lib/theme";
@@ -25,8 +25,8 @@ if (!projectId) {
 createAppKit({
   adapters: [wagmiAdapter],
   projectId: projectId || "", // allow local dev without crashing
-  networks: [base],
-  defaultNetwork: base,
+  networks: currentAppKitNetwork ? [currentAppKitNetwork] : [base],
+  defaultNetwork: currentAppKitNetwork || base,
   metadata: {
     name: "Streaming Leaderboard",
     description: "Streaming Leaderboard Example",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TOKEN_ADDRESS, TOKEN_SYMBOL, fetchStremeTokenData, fetchTopPoolMembers, fetchUniswapPoolData, type StremeTokenData, type PoolMember, type UniswapPoolData } from "../lib/superfluid";
+import { TOKEN_ADDRESS, TOKEN_SYMBOL, CHAIN_ID, fetchStremeTokenData, fetchTopPoolMembers, fetchUniswapPoolData, type StremeTokenData, type PoolMember, type UniswapPoolData } from "../lib/superfluid";
 import { resolveManyProfiles, type ResolvedProfile } from "../lib/whois";
 import { shortenAddress } from "../lib/utils";
 
@@ -10,6 +10,20 @@ interface StremeCardProps {
 }
 
 export function StremeCard({ className = "" }: StremeCardProps) {
+  // Only show Streme data on Base network (8453)
+  if (CHAIN_ID !== 8453) {
+    return (
+      <div className={`theme-card-bg theme-border rounded-lg p-6 ${className}`} style={{borderWidth: '1px'}}>
+        <h2 className="text-xl font-bold mb-4 theme-text-primary">STREME DATA</h2>
+        <div className="text-center py-8">
+          <div className="theme-text-muted mb-2">ℹ️</div>
+          <div className="theme-text-muted text-sm">
+            Streme data is only available on Base network
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [stremeData, setStremeData] = useState<StremeTokenData | null>(null);
   const [poolMembers, setPoolMembers] = useState<PoolMember[]>([]);
   const [memberProfiles, setMemberProfiles] = useState<Record<string, ResolvedProfile>>({});

@@ -1,56 +1,125 @@
-This is a [Vite](https://vitejs.dev) project bootstrapped with [`@farcaster/create-mini-app`](https://github.com/farcasterxyz/miniapps/tree/main/packages/create-mini-app).
+# Streaming Leaderboard Example
 
-For documentation and guides, visit [miniapps.farcaster.xyz](https://miniapps.farcaster.xyz/docs/getting-started).
+A multi-network streaming leaderboard built with React, Vite, and Superfluid Protocol.
+
+## Features
+
+- Multi-network support (Base, Polygon, Optimism, Arbitrum, Ethereum, Gnosis Chain)
+- Real-time streaming data visualization
+- Token statistics and leaderboards
+- Pool management (GDA)
+- Wrap/unwrap token functionality
+- Analytics and events tracking
+
+## Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd streaming-leaderboard-example
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Configure environment**
+   ```bash
+   cp env.example .env
+   ```
+   
+   Edit `.env` with your configuration:
+   ```bash
+   # Required: Set the network you want to use
+   VITE_CHAIN_ID=8453      # Base (default)
+   # VITE_CHAIN_ID=11155420 # Optimism Sepolia (testnet)
+   
+   # Optional: Your Reown project ID for wallet connections
+   VITE_REOWN_PROJECT_ID=your_project_id
+   
+   # Optional: Token configuration (defaults provided)
+   VITE_TOKEN_ADDRESS=0x3B3Cd21242BA44e9865B066e5EF5d1cC1030CC58
+   VITE_TOKEN_SYMBOL=STREME
+   ```
+
+4. **Start development server**
+   ```bash
+   pnpm dev
+   ```
+
+## Supported Networks
+
+The app supports the following networks. Simply set `VITE_CHAIN_ID` to the desired network:
+
+### Mainnet Networks
+| Network | Chain ID | 
+|---------|----------|
+| Base (default) | `8453` |
+| Polygon | `137` |
+| Optimism | `10` |
+| Arbitrum One | `42161` |
+| Ethereum | `1` |
+| Gnosis Chain | `100` |
+
+### Testnet Networks
+| Network | Chain ID | 
+|---------|----------|
+| **Optimism Sepolia** | `11155420` |
+| Ethereum Sepolia | `11155111` |
+| Avalanche Fuji | `43113` |
+| Scroll Sepolia | `534351` |
+
+> **Note**: Optimism Sepolia is fully supported with all Superfluid features including vesting, flow scheduler, and auto-wrap subgraphs.
 
 ## Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+### Required
+- `VITE_CHAIN_ID` - The chain ID of the network to use
 
-```env
-# Reown/WalletConnect Project ID
-VITE_REOWN_PROJECT_ID=your_project_id_here
+### Optional
+- `VITE_REOWN_PROJECT_ID` - Your Reown (WalletConnect) project ID
+- `VITE_TOKEN_ADDRESS` - The token address to track (defaults to STREME)
+- `VITE_TOKEN_SYMBOL` - The token symbol (defaults to STREME)
+- `VITE_X_URL` - Twitter/X URL for social links
+- `VITE_FARCASTER_URL` - Farcaster URL for social links
+- `VITE_TELEGRAM_URL` - Telegram URL for social links
+- `VITE_WEBSITE_URL` - Website URL for social links
 
-# Token Configuration
-# The address of the Superfluid token to track
-VITE_TOKEN_ADDRESS=0x1c4f69f14cf754333c302246d25a48a13224118a
+## Technology Stack
 
-# The symbol/ticker of the token to display in the UI
-VITE_TOKEN_SYMBOL=BUTTHOLE
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS
+- **Web3**: Wagmi, Viem, Reown AppKit
+- **Protocol**: Superfluid Protocol
+- **Data**: The Graph (Subgraph queries)
+- **State**: TanStack Query
 
-# Social Links (Optional)
-# Official X (formerly Twitter) profile URL
-VITE_X_URL=https://twitter.com/your_token_handle
+## Project Structure
 
-# Official Farcaster profile URL  
-VITE_FARCASTER_URL=https://warpcast.com/your_token_handle
-
-# Official Telegram group or channel URL
-VITE_TELEGRAM_URL=https://t.me/your_token_group
-
-# Official website URL
-VITE_WEBSITE_URL=https://your-token-website.com
+```
+src/
+├── components/          # React components
+│   ├── pages/          # Page components
+│   └── ui/             # UI components
+├── hooks/              # Custom hooks
+│   └── queries/        # Data fetching hooks
+├── lib/                # Utility libraries
+│   ├── superfluid.ts   # Superfluid integration
+│   ├── graphql-client.ts # GraphQL client
+│   └── wagmi.ts        # Web3 configuration
+└── queries/            # GraphQL queries
 ```
 
-The app will use these environment variables to configure which Superfluid token to track for streaming leaderboards and statistics. If not provided, it defaults to the BUTTHOLE token address shown above.
+## Development
 
-Social links are optional - if provided, they will display as official profile/page links. If not provided, those social media buttons will not be shown (only DEXScreener, BaseScan, and Copy Contract will always be available).
+- **Lint**: `pnpm lint`
+- **Build**: `pnpm build`
+- **Preview**: `pnpm preview`
 
-## `farcaster.json`
+## Deployment
 
-The `/.well-known/farcaster.json` is served from the [public
-directory](https://vite.dev/guide/assets) and can be updated by editing
-`./public/.well-known/farcaster.json`.
-
-You can also use the `public` directory to serve a static image for `splashBackgroundImageUrl`.
-
-## Frame Embed
-
-Add a the `fc:frame` in `index.html` to make your root app URL sharable in feeds:
-
-```html
-  <head>
-    <!--- other tags --->
-    <meta name="fc:frame" content='{"version":"next","imageUrl":"https://placehold.co/900x600.png?text=Frame%20Image","button":{"title":"Open","action":{"type":"launch_frame","name":"App Name","url":"https://app.com"}}}' /> 
-  </head>
-```
-
+1. Build the project:
+   ```bash
+   pnpm build
+   ```
